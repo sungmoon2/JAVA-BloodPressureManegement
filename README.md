@@ -4,13 +4,11 @@
 - MySQL Workbench 8.0 이상 (MariaDB 11.4.3과 호환되는 버전)
 
 MySQL:
-
 버전: 11.4.3-MariaDB
 클라이언트 버전: 15.2 for Win64 (AMD64)
 소스 리비전: 5ab81ffe0097a22a774957df28c5223cf0201de3
 
 MariaDB:
-
 버전: 11.4.3-MariaDB
 클라이언트 버전: 15.2 for Win64 (AMD64)
 소스 리비전: 5ab81ffe0097a22a774957df28c5223cf0201de3
