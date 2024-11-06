@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .welcome-message {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .content {
+            text-align: center;
+            padding: 20px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav">
+        <h1>혈압 관리 시스템</h1>
+
+        <!-- 로그인하지 않은 경우 -->
+        <div sec:authorize="isAnonymous()" class="auth-buttons">
+            <a class="btn" th:href="@{/members/login}">로그인</a>
+            <a class="btn" th:href="@{/members/register}">회원가입</a>
+        </div>
+
+        <!-- 로그인한 경우 -->
+        <div sec:authorize="isAuthenticated()" class="welcome-message">
+            <span sec:authentication="name"></span><span>님 환영합니다!</span>
+            <a class="btn" th:href="@{/members/mypage}">마이페이지</a>
+            <form th:action="@{/members/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="btn logout-btn">로그아웃</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="content">
+        <h2>혈압 관리를 시작해보세요!</h2>
+        <p>정기적인 혈압 측정과 기록으로 건강한 생활을 유지하세요.</p>
+    </div>
+</div>
+</body>
+</html>
