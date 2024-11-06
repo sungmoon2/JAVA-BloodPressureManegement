@@ -1,5 +1,4 @@
 ## 필요한 소프트웨어
-
 - MariaDB 11.4.3 이상
 - MySQL Workbench 8.0 이상 (MariaDB 11.4.3과 호환되는 버전)
 
