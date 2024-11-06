@@ -1,7 +1,4 @@
 ## 필요한 소프트웨어
-- MariaDB 11.4.3 이상
-- MySQL Workbench 8.0 이상 (MariaDB 11.4.3과 호환되는 버전)
-
 MySQL:
 버전: 11.4.3-MariaDB
 클라이언트 버전: 15.2 for Win64 (AMD64)
