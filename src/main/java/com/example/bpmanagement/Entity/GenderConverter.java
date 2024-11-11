@@ -1,4 +1,4 @@
-package com.example.bloodpressure.Entity;
+package com.example.bpmanagement.Entity;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

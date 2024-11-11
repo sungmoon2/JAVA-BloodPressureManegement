@@ -1,8 +1,8 @@
-package com.example.bloodpressure.Service;
+package com.example.bpmanagement.Service;
 
-import com.example.bloodpressure.DTO.MemberDTO;  // 회원 정보를 주고받기 위한 DTO 클래스 임포트
-import com.example.bloodpressure.Entity.Member;  // 회원 정보를 저장하는 엔티티 클래스 임포트
-import com.example.bloodpressure.Repository.MemberRepository;  // 회원 데이터베이스 접근을 위한 리포지토리 임포트
+import com.example.bpmanagement.DTO.MemberDTO;  // 회원 정보를 주고받기 위한 DTO 클래스 임포트
+import com.example.bpmanagement.Entity.Member;  // 회원 정보를 저장하는 엔티티 클래스 임포트
+import com.example.bpmanagement.Repository.MemberRepository;  // 회원 데이터베이스 접근을 위한 리포지토리 임포트
 import lombok.RequiredArgsConstructor;  // final 필드에 대한 생성자를 자동 생성해주는 Lombok 애너테이션 임포트
 import lombok.extern.slf4j.Slf4j;  // 로깅을 위한 Lombok 애너테이션 임포트
 import org.springframework.security.crypto.password.PasswordEncoder;  // 비밀번호 암호화를 위한 Spring Security 클래스 임포트

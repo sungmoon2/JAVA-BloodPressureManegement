@@ -1,8 +1,8 @@
 // 패키지 선언: DTO 클래스는 데이터를 전송하기 위한 객체로 'DTO' 패키지에 포함
-package com.example.bloodpressure.DTO;
+package com.example.bpmanagement.DTO;
 
 // Lombok 라이브러리를 사용해 코드 간결화를 위한 애너테이션 import
-import com.example.bloodpressure.Entity.Gender;
+import com.example.bpmanagement.Entity.Gender;
 import lombok.*;  // Lombok에서 제공하는 @Getter, @Setter 등 다양한 애너테이션을 사용하기 위해 패키지 임포트
 
 // 모든 필드에 대한 Getter 메서드를 자동으로 생성해주는 Lombok의 @Getter 애너테이션

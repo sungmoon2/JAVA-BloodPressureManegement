@@ -8,7 +8,8 @@ group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = '17'
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 configurations {
@@ -36,7 +37,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-
 springBoot {
-    mainClass = 'com.example.bloodpressure.Main'
+    mainClass = 'com.example.bpmanagement.Main'
 }

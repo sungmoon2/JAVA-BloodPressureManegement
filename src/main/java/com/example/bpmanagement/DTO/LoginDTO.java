@@ -1,6 +1,6 @@
 // 패키지 선언: 이 클래스는 DTO (Data Transfer Object)로, 'DTO'라는 패키지에 포함되어 있습니다.
 // DTO는 계층 간 데이터를 전달하는 객체로 사용됩니다.
-package com.example.bloodpressure.DTO;
+package com.example.bpmanagement.DTO;
 
 // Lombok의 @Data 애너테이션을 임포트합니다.
 // @Data는 Lombok에서 제공하는 애너테이션으로, 아래 클래스에 대해 

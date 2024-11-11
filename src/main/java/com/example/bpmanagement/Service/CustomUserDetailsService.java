@@ -1,8 +1,8 @@
-package com.example.bloodpressure.Service;  // 해당 클래스가 위치할 패키지 선언
+package com.example.bpmanagement.Service;  // 해당 클래스가 위치할 패키지 선언
 
 // 필요한 클래스들을 임포트
-import com.example.bloodpressure.Entity.Member;  // Member 엔티티
-import com.example.bloodpressure.Repository.MemberRepository;  // 회원 정보 접근을 위한 레포지토리
+import com.example.bpmanagement.Entity.Member;  // Member 엔티티
+import com.example.bpmanagement.Repository.MemberRepository;  // 회원 정보 접근을 위한 레포지토리
 import lombok.RequiredArgsConstructor;  // final 필드에 대한 생성자 자동 생성
 import org.springframework.security.core.userdetails.User;  // Spring Security의 User 클래스
 import org.springframework.security.core.userdetails.UserDetails;  // 사용자 상세 정보 인터페이스

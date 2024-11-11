@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원정보 수정</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        input[type="number"] {
+            width: 200px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .nav-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        /* 폼 섹션 스타일 */
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .form-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        /* 입력 필드 placeholder 스타일 */
+        input::placeholder {
+            color: #adb5bd;
+        }
+
+        /* 필수 입력 필드 표시 */
+        .required-field::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        /* 비밀번호 설명 텍스트 스타일 */
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>회원정보 수정</h2>
+
+    <!-- 메시지 표시 -->
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- 회원 정보 수정 폼 -->
+    <form th:action="@{/members/update}" method="post">
+        <!-- 기본 정보 섹션 -->
+        <div class="form-section">
+            <div class="form-section-title">기본 정보</div>
+
+            <div class="form-group">
+                <label for="username" class="required-field">아이디</label>
+                <input type="text" id="username" name="username" th:value="${member.username}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="name" class="required-field">이름</label>
+                <input type="text" id="name" name="name" th:value="${member.name}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="required-field">이메일</label>
+                <input type="email" id="email" name="email" th:value="${member.email}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber" class="required-field">전화번호</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" th:value="${member.phoneNumber}"
+                       pattern="[0-9]{11}" placeholder="'-' 없이 숫자만 입력 (예: 01012345678)" required>
+            </div>
+        </div>
+
+        <!-- 비밀번호 섹션 -->
+        <div class="form-section">
+            <div class="form-section-title">비밀번호 변경</div>
+
+            <div class="form-group">
+                <label for="password">새 비밀번호</label>
+                <input type="password" id="password" name="password">
+                <div class="password-hint">변경하지 않으려면 비워두세요</div>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordConfirm">비밀번호 확인</label>
+                <input type="password" id="passwordConfirm" name="passwordConfirm">
+            </div>
+        </div>
+
+        <!-- 추가 정보 섹션 -->
+        <div class="form-section">
+            <div class="form-section-title">추가 정보</div>
+
+            <div class="form-group">
+                <label for="age" class="required-field">나이</label>
+                <input type="number" id="age" name="age" th:value="${member.age}" required min="1" max="150">
+            </div>
+
+            <div class="form-group">
+                <label for="height" class="required-field">키 (cm)</label>
+                <input type="number" id="height" name="height" th:value="${member.height}"
+                       step="0.1" required min="1" max="300">
+            </div>
+
+            <div class="form-group">
+                <label for="weight" class="required-field">몸무게 (kg)</label>
+                <input type="number" id="weight" name="weight" th:value="${member.weight}"
+                       step="0.1" required min="1" max="500">
+            </div>
+
+            <div class="form-group">
+                <label for="gender" class="required-field">성별</label>
+                <select id="gender" name="gender" required>
+                    <option value="">선택하세요</option>
+                    <option value="MALE" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).MALE}">남성</option>
+                    <option value="FEMALE" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).FEMALE}">여성</option>
+                    <option value="UNKNOWN" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).UNKNOWN}">선택안함</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a th:href="@{/members/mypage}" class="btn btn-secondary">취소</a>
+            <button type="submit" class="btn btn-primary">정보 수정</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

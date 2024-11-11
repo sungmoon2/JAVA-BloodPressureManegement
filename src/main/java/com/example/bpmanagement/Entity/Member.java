@@ -1,5 +1,5 @@
 // 패키지 선언: 엔티티 클래스는 주로 도메인 모델을 나타내므로 'Entity' 패키지에 포함
-package com.example.bloodpressure.Entity;
+package com.example.bpmanagement.Entity;
 
 // JPA 애너테이션 관련 라이브러리를 사용하기 위해 필요한 import 문
 import jakarta.persistence.*;  // JPA에서 제공하는 애너테이션(@Entity, @Id 등)을 사용하기 위한 패키지

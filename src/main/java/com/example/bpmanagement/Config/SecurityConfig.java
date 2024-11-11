@@ -1,4 +1,4 @@
-package com.example.bloodpressure.Config;
+package com.example.bpmanagement.Config;
 
 import org.springframework.context.annotation.Bean;  // Spring Bean 객체를 생성하기 위한 애너테이션을 임포트
 import org.springframework.context.annotation.Configuration;  // 해당 클래스가 설정 클래스임을 나타내는 애너테이션을 임포트
@@ -31,7 +31,7 @@ public class SecurityConfig {
                                 "/login-process",  // 로그인 처리 URL도 인증 없이 접근 허용
                                 "/error"  // 오류 페이지도 인증 없이 접근 허용
                         ).permitAll()  // 위의 경로에 대해서는 모두 인증 없이 접근을 허용하도록 설정
-                        .requestMatchers("/members/mypage/**").authenticated()  // "/members/mypage/**" URL 경로는 인증된 사용자만 접근 가능하도록 설정
+                        .requestMatchers("/members/mypage/**, /members/update/**").authenticated()  // "/members/mypage/**" URL 경로는 인증된 사용자만 접근 가능하도록 설정
                         .anyRequest().authenticated()  // 위에서 설정되지 않은 모든 다른 요청은 인증된 사용자만 접근 가능하도록 설정
                 )
                 .formLogin(form -> form

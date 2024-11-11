@@ -1,10 +1,10 @@
 // Member 엔티티를 위한 Repository 인터페이스입니다. 
 // 이 인터페이스는 Spring Data JPA의 JpaRepository를 상속하여 CRUD와 관련된 데이터베이스 접근 기능을 제공합니다.
 
-package com.example.bloodpressure.Repository;  // Repository 패키지에 속해 있는 클래스임을 선언
+package com.example.bpmanagement.Repository;  // Repository 패키지에 속해 있는 클래스임을 선언
 
 // Member 엔티티를 import 하여 데이터베이스 접근 시 사용
-import com.example.bloodpressure.Entity.Member;
+import com.example.bpmanagement.Entity.Member;
 
 // Spring Data JPA에서 제공하는 JpaRepository를 import하여 데이터베이스의 CRUD 작업을 자동으로 지원
 import org.springframework.data.jpa.repository.JpaRepository;

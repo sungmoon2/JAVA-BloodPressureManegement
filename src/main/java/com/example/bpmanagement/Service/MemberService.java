@@ -1,8 +1,8 @@
-package com.example.bloodpressure.Service;
+package com.example.bpmanagement.Service;
 
-import com.example.bloodpressure.DTO.MemberDTO;  // DTO 클래스: 데이터를 전달할 때 사용
-import com.example.bloodpressure.Entity.Member;  // 회원 엔티티 클래스: 데이터베이스와 매핑되는 클래스
-import com.example.bloodpressure.Repository.MemberRepository;  // 회원 데이터 접근을 위한 리포지토리 인터페이스
+import com.example.bpmanagement.DTO.MemberDTO;  // DTO 클래스: 데이터를 전달할 때 사용
+import com.example.bpmanagement.Entity.Member;  // 회원 엔티티 클래스: 데이터베이스와 매핑되는 클래스
+import com.example.bpmanagement.Repository.MemberRepository;  // 회원 데이터 접근을 위한 리포지토리 인터페이스
 import lombok.RequiredArgsConstructor;  // final 필드에 대한 생성자를 자동으로 생성해주는 Lombok 애너테이션
 import lombok.extern.slf4j.Slf4j;  // 로깅 기능 제공하는 Lombok 애너테이션
 import org.springframework.security.core.userdetails.UsernameNotFoundException;  // 사용자 미발견 예외 클래스

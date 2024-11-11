@@ -1,4 +1,4 @@
-package com.example.bloodpressure.Entity;
+package com.example.bpmanagement.Entity;
 
 // Gender는 성별을 나타내는 열거형(enum) 클래스입니다.
 // 성별 정보는 기본적으로 고정된 값을 가지므로 Enum을 사용하여 값을 명확히 정의합니다.
@@ -20,4 +20,6 @@ public enum Gender {
     public String getLabel() {
         return label;
     }
+
+
 }
