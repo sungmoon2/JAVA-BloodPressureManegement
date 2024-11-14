@@ -2,111 +2,54 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>혈압 데이터 목록</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* 전체 컨테이너 스타일 */
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        /* 제목 스타일 */
-        h2 {
-            color: #343a40;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        /* 테이블 스타일 */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .data-table th, .data-table td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #dee2e6;
-        }
-
-        .data-table th {
-            background-color: #e9ecef;
-            color: #495057;
-            font-weight: bold;
-        }
-
-        .data-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-        .data-table tr:hover {
-            background-color: #e9ecef;
-        }
-
-        /* 버튼 컨테이너 스타일 */
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        /* 버튼 스타일 */
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        /* 메시지 스타일 */
         .message {
-            padding: 10px;
+            padding: 15px;
             margin-bottom: 20px;
             border-radius: 4px;
         }
-
         .success {
             background-color: #d4edda;
+            border-color: #c3e6cb;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
-
         .error {
             background-color: #f8d7da;
+            border-color: #f5c6cb;
             color: #721c24;
-            border: 1px solid #f5c6cb;
+        }
+        .source-manual {
+            color: #0066cc;
+        }
+        .source-auto {
+            color: #28a745;
+        }
+        .top-button-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .container {
+            position: relative;
+            padding-top: 40px;
         }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="container mt-5">
+    <div class="top-button-container">
+        <a th:href="@{/}" class="btn btn-secondary">뒤로가기</a>
+        <a th:href="@{/bloodpressure/add}" class="btn btn-primary">혈압 데이터 추가하기</a>
+        <a th:href="@{/bloodpressure/chart}" class="btn btn-primary">차트로 보기</a>
+    </div>
+
     <h2>혈압 데이터 목록</h2>
 
-    <!-- 성공/에러 메시지 표시 -->
     <div th:if="${message}" class="message success" th:text="${message}"></div>
     <div th:if="${error}" class="message error" th:text="${error}"></div>
 
-    <!-- 혈압 데이터 테이블 -->
-    <table class="data-table">
+    <table class="table table-striped">
         <thead>
         <tr>
             <th>측정 날짜</th>
@@ -114,28 +57,30 @@
             <th>이완기</th>
             <th>맥박</th>
             <th>특이사항</th>
+            <th>데이터 출처</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:if="${bloodpressuredata == null || bloodpressuredata.empty}">
-            <td colspan="5">저장된 혈압 데이터가 없습니다.</td>
+        <tr th:if="${#lists.isEmpty(bloodpressuredata)}">
+            <td colspan="6" class="text-center">저장된 혈압 데이터가 없습니다.</td>
         </tr>
-        <tr th:each="data : ${bloodpressuredata}">
-            <td th:text="${#temporals.format(data.measureDatetime, 'yyyy-MM-dd HH:mm')}"></td>
-            <td th:text="${data.systolic}"></td>
-            <td th:text="${data.diastolic}"></td>
-            <td th:text="${data.pulse}"></td>
-            <td th:text="${data.remark}"></td>
+        <tr th:each="record : ${bloodpressuredata}">
+            <td th:text="${#temporals.format(record.measureDatetime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+            <td th:text="${record.systolic}"></td>
+            <td th:text="${record.diastolic}"></td>
+            <td th:text="${record.pulse}"></td>
+            <td th:text="${record.remark}"></td>
+            <td>
+                <span th:if="${record.source == '수기입력'}" class="badge badge-primary" th:text="${record.source}"></span>
+                <span th:if="${record.source == '자동측정'}" class="badge badge-success" th:text="${record.source}"></span>
+            </td>
         </tr>
         </tbody>
     </table>
-
-    <!-- 버튼 영역 -->
-    <div class="button-container">
-        <a th:href="@{/}" class="btn btn-secondary">뒤로가기</a>
-        <a th:href="@{/bloodpressure/add}" class="btn btn-primary">혈압 데이터 추가하기</a>
-        <a th:href="@{/bloodpressure/chart}" class="btn btn-primary">차트로 보기</a>
-    </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

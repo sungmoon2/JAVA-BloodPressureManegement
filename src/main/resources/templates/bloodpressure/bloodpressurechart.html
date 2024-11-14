@@ -2,159 +2,236 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>혈압 데이터 차트</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    .container {
-      max-width: 1200px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-
-    .chart-container {
+    .chart-wrapper {
+      position: relative;
+      height: 400px;
+      overflow-x: auto;
+      overflow-y: hidden;
       margin: 20px 0;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      height: 500px; /* 차트 컨테이너 높이 설정 */
     }
-
-    .tab-container {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+    .chart-container {
+      height: 100%;
+      min-width: 100%;
     }
-
-    .tab-button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background-color: #f0f0f0;
+    .chart-container.large {
+      min-width: 200%;
     }
-
-    .tab-button.active {
-      background-color: #007bff;
-      color: white;
-    }
-
     .button-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    .legend-container {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background-color: white;
+      padding: 10px;
+      text-align: center;
+      z-index: 1000;
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-top: 60px; /* 버튼 영역만큼 여백 추가 */
     }
-
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      color: white;
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
-
-    .btn-secondary {
-      background-color: #6c757d;
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-<div class="container">
+<div class="container mt-5 position-relative">
+  <div class="button-container">
+    <a th:href="@{/}" class="btn btn-secondary">뒤로가기</a>
+    <a th:href="@{/bloodpressure/add}" class="btn btn-primary">혈압 데이터 추가하기</a>
+    <a th:href="@{/bloodpressure/chart}" class="btn btn-primary">차트로 보기</a>
+  </div>
+
   <h2>혈압 데이터 차트</h2>
 
-  <div class="tab-container">
-    <button class="tab-button active" data-period="24hours">24시간</button>
-    <button class="tab-button" data-period="7days">7일</button>
-    <button class="tab-button" data-period="3months">3개월</button>
-    <button class="tab-button" data-period="6months">6개월</button>
+  <div class="legend-container">
+    <div class="legend-item">
+      <span class="legend-color" style="background-color: rgb(255,0,0)"></span>
+      <span>수축기</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background-color: rgb(0,0,255)"></span>
+      <span>이완기</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-color" style="background-color: rgb(255,127,0)"></span>
+      <span>맥박</span>
+    </div>
   </div>
 
-  <div class="chart-container">
-    <canvas id="bloodPressureChart"></canvas>
+  <!-- 데이터 디버깅용 -->
+  <div style="display: none;">
+    <p th:text="${#lists.size(last24Hours)}">24시간 데이터 수</p>
+    <p th:text="${#lists.size(last7Days)}">7일 데이터 수</p>
   </div>
 
-  <div class="button-container">
-    <a th:href="@{/bloodpressure/data}" class="btn btn-secondary">목록으로 돌아가기</a>
+  <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="tab-24h" data-toggle="tab" href="#hours24" role="tab">24시간</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-7d" data-toggle="tab" href="#days7" role="tab">7일</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-3m" data-toggle="tab" href="#months3" role="tab">3개월</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-6m" data-toggle="tab" href="#months6" role="tab">6개월</a>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="hours24" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container">
+          <canvas id="chart24h"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="days7" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container">
+          <canvas id="chart7d"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="months3" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container large">
+          <canvas id="chart3m"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="months6" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container large">
+          <canvas id="chart6m"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 <script th:inline="javascript">
-  // Thymeleaf 데이터를 JavaScript 변수로 변환
-  const chartData = {
-    'last24Hours': /*[[${last24Hours}]]*/ [],
-    'last7Days': /*[[${last7Days}]]*/ [],
-    'last3Months': /*[[${last3Months}]]*/ [],
-    'last6Months': /*[[${last6Months}]]*/ []
-  };
+  /*<![CDATA[*/
+  // 데이터 가져오기
+  const data24h = /*[[${last24Hours}]]*/ [];
+  const data7d = /*[[${last7Days}]]*/ [];
+  const data3m = /*[[${last3Months}]]*/ [];
+  const data6m = /*[[${last6Months}]]*/ [];
 
-  let currentChart = null;
+  // 디버깅
+  console.log('24시간 데이터:', data24h);
+  console.log('7일 데이터:', data7d);
 
-  function createChart(data, period) {
-    const ctx = document.getElementById('bloodPressureChart').getContext('2d');
+  function formatDate(dateString, period) {
+    const date = new Date(dateString);
+    const currentYear = new Date().getFullYear();
 
-    if (currentChart) {
-      currentChart.destroy();
-    }
+    switch(period) {
+      case '24h':
+        // 24시간 데이터: "MM-DD HH:mm"
+        return date.toLocaleDateString('ko-KR', {
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).replace(/\./g, '-');
 
-    // 날짜 포맷 설정
-    const formatDate = (dateStr, period) => {
-      const date = new Date(dateStr);
-      switch(period) {
-        case '24hours':
-          return date.toLocaleString('ko-KR', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          });
-        case '7days':
-          return date.toLocaleString('ko-KR', {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-          });
-        default:
-          return date.toLocaleString('ko-KR', {
+      case '7d':
+        // 7일 데이터: "MM-DD"
+        return date.toLocaleDateString('ko-KR', {
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\./g, '-');
+
+      case '3m':
+      case '6m':
+        // 3개월, 6개월 데이터: 년도가 다를 때만 "YYYY-MM-DD", 같으면 "MM-DD"
+        if (date.getFullYear() !== currentYear) {
+          return date.toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-          });
-      }
-    };
+          }).replace(/\./g, '-');
+        } else {
+          return date.toLocaleDateString('ko-KR', {
+            month: '2-digit',
+            day: '2-digit'
+          }).replace(/\./g, '-');
+        }
 
-    const chartConfig = {
+      default:
+        return date.toLocaleString();
+    }
+  }
+
+  function createChart(canvasId, data, title) {
+    if (!data || data.length === 0) {
+      console.log('데이터 없음:', title);
+      return;
+    }
+
+    // 차트 기간 판단
+    let period;
+    if (canvasId === 'chart24h') period = '24h';
+    else if (canvasId === 'chart7d') period = '7d';
+    else if (canvasId === 'chart3m') period = '3m';
+    else if (canvasId === 'chart6m') period = '6m';
+
+    // 데이터 포인트 수에 따라 차트 컨테이너 너비 조정
+    const container = document.getElementById(canvasId).parentElement;
+    if (data.length > 50) {  // 데이터가 50개 이상이면
+      const width = Math.max(100, data.length * 20); // 각 데이터 포인트당 20px
+      container.style.width = width + 'px';
+    }
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.map(item => formatDate(item.measureDatetime, period)),
+        labels: data.map(d => formatDate(d.measureDatetime, period)),
         datasets: [
           {
-            label: '수축기 혈압',
-            data: data.map(item => item.systolic),
-            borderColor: 'rgb(255, 0, 0)',  // 빨간색
-            backgroundColor: 'rgb(255, 0, 0)',
-            borderWidth: 2,
+            label: '수축기',
+            data: data.map(d => d.systolic),
+            borderColor: 'rgb(255,0,0)',
             fill: false,
             tension: 0.1
           },
           {
-            label: '이완기 혈압',
-            data: data.map(item => item.diastolic),
-            borderColor: 'rgb(0, 0, 255)',  // 파란색
-            backgroundColor: 'rgb(0, 0, 255)',
-            borderWidth: 2,
+            label: '이완기',
+            data: data.map(d => d.diastolic),
+            borderColor: 'rgb(0,0,255)',
             fill: false,
             tension: 0.1
           },
           {
             label: '맥박',
-            data: data.map(item => item.pulse),
-            borderColor: 'rgb(255, 165, 0)',  // 주황색
-            backgroundColor: 'rgb(255, 165, 0)',
-            borderWidth: 2,
+            data: data.map(d => d.pulse),
+            borderColor: 'rgb(255,127,0)',
             fill: false,
             tension: 0.1
           }
@@ -162,45 +239,23 @@
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,  // 차트 크기 조절 가능
-        scales: {
-          y: {
-            beginAtZero: false,
-            title: {
-              display: true,
-              text: '혈압 (mmHg) / 맥박 (bpm)',
-              font: {
-                size: 14
-              }
-            },
-            min: Math.min(...data.map(item =>
-                    Math.min(item.systolic, item.diastolic, item.pulse)
-            )) - 10,
-            max: Math.max(...data.map(item =>
-                    Math.max(item.systolic, item.diastolic, item.pulse)
-            )) + 10
-          },
-          x: {
-            title: {
-              display: true,
-              text: '측정 날짜/시간',
-              font: {
-                size: 14
-              }
-            }
-          }
-        },
+        maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top',
-            labels: {
-              font: {
-                size: 12
-              }
-            }
+            display: false
+          },
+          title: {
+            display: true,
+            text: title
           },
           tooltip: {
+            mode: 'index',
+            intersect: false,
             callbacks: {
+              title: function(context) {
+                return new Date(data[context[0].dataIndex].measureDatetime)
+                        .toLocaleString('ko-KR');
+              },
               label: function(context) {
                 let label = context.dataset.label || '';
                 if (label) {
@@ -208,49 +263,52 @@
                 }
                 if (context.parsed.y !== null) {
                   label += context.parsed.y;
-                  if (label.includes('혈압')) {
-                    label += ' mmHg';
-                  } else {
+                  if (label.includes('맥박')) {
                     label += ' bpm';
+                  } else {
+                    label += ' mmHg';
                   }
                 }
                 return label;
               }
             }
           }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: false,
+            min: 40,
+            max: 200,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
         }
       }
-    };
-
-    currentChart = new Chart(ctx, chartConfig);
+    });
   }
 
-  // 탭 클릭 이벤트 핸들러
+  // DOM이 로드된 후 차트 생성
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('탭 클릭:', this.dataset.period);
-
-        // 활성 탭 변경
-        document.querySelectorAll('.tab-button').forEach(btn =>
-                btn.classList.remove('active'));
-        this.classList.add('active');
-
-        // 차트 데이터 업데이트
-        const period = this.dataset.period;
-        const dataKey = period === '24hours' ? 'last24Hours' :
-                period === '7days' ? 'last7Days' :
-                        period === '3months' ? 'last3Months' : 'last6Months';
-
-        console.log(`선택된 기간(${period})의 데이터:`, chartData[dataKey]);
-        createChart(chartData[dataKey], period);
-      });
-    });
-
-    // 초기 차트 표시
-    createChart(chartData.last24Hours, '24hours');
+    createChart('chart24h', data24h, '최근 24시간');
+    createChart('chart7d', data7d, '최근 7일');
+    createChart('chart3m', data3m, '최근 3개월');
+    createChart('chart6m', data6m, '최근 6개월');
   });
+  /*]]>*/
 </script>
 </body>
 </html>
