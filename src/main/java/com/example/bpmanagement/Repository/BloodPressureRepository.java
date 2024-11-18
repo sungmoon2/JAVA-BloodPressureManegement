@@ -4,6 +4,8 @@ package com.example.bpmanagement.Repository;
 import com.example.bpmanagement.Entity.BloodPressure;
 import com.example.bpmanagement.Entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,7 +16,13 @@ public interface BloodPressureRepository extends JpaRepository<BloodPressure, Lo
 
     // 특정 회원(Member)의 혈압 데이터를 날짜 기준으로 내림차순 정렬하여 조회
     List<BloodPressure> findAllByMemberOrderByMeasureDatetimeDesc(Member member);
+
     List<BloodPressure> findByMemberAndMeasureDatetimeBetweenOrderByMeasureDatetimeAsc(
-            Member member, LocalDateTime start, LocalDateTime end);
-}
+            Member member, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<BloodPressure> findByMeasureDatetimeBetweenOrderByMeasureDatetimeDesc(LocalDateTime startDate, LocalDateTime endDate);
+
+
+};
+
 

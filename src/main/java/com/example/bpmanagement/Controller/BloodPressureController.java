@@ -7,6 +7,8 @@ package com.example.bpmanagement.Controller;
 import com.example.bpmanagement.DTO.BloodPressureDTO;
 
 // `BloodPressureService`는 비즈니스 로직을 처리하는 서비스 클래스입니다.
+import com.example.bpmanagement.Entity.Member;
+import com.example.bpmanagement.Repository.MemberRepository;
 import com.example.bpmanagement.Service.BloodPressureService;
 
 // `CombinedBloodPressureData`는 혈압 데이터를 조합하여 사용할 때 사용하는 내부 클래스입니다.
@@ -16,6 +18,9 @@ import com.example.bpmanagement.Service.BloodPressureService.CombinedBloodPressu
 import lombok.RequiredArgsConstructor;
 
 // `Controller`는 Spring MVC에서 이 클래스가 컨트롤러 역할을 한다는 것을 나타냅니다.
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 // `Model`은 뷰(HTML) 페이지로 데이터를 전달할 때 사용하는 객체입니다.
@@ -32,19 +37,28 @@ import java.time.LocalDateTime;
 
 // `List`는 데이터를 리스트 형태로 저장하고 관리하기 위해 사용합니다.
 import java.util.List;
+import java.util.Map;
 
 // @Controller 어노테이션을 사용하면 Spring이 이 클래스를 웹 요청을 처리하는 컨트롤러로 인식합니다.
 @Controller
 
 // @RequiredArgsConstructor는 Lombok에서 제공하며, final로 선언된 필드에 대해 생성자를 자동으로 생성합니다.
-@RequiredArgsConstructor
 
 // @RequestMapping("/bloodpressure")는 "/bloodpressure"로 시작하는 모든 URL 요청을 이 컨트롤러에서 처리하게 합니다.
 @RequestMapping("/bloodpressure")
 public class BloodPressureController {
 
+    @Autowired
+    public BloodPressureController(BloodPressureService bloodPressureService,
+                                   MemberRepository memberRepository) {
+        this.bloodPressureService = bloodPressureService;
+        this.memberRepository = memberRepository;
+    }
+
+
     // `BloodPressureService` 객체를 의존성 주입(DI) 방식으로 사용합니다.
     private final BloodPressureService bloodPressureService;
+    private final MemberRepository memberRepository;
 
     /**
      * GET 요청 메서드입니다.
@@ -59,8 +73,9 @@ public class BloodPressureController {
     /**
      * POST 요청 메서드입니다.
      * "/bloodpressure/add" URL로 사용자가 입력한 혈압 데이터를 전송할 때 호출됩니다.
+     *
      * @param bloodPressureRecordDTO 사용자가 입력한 혈압 데이터를 담은 객체입니다.
-     * @param redirectAttributes 리다이렉트할 때 전달할 메시지를 저장하는 객체입니다.
+     * @param redirectAttributes     리다이렉트할 때 전달할 메시지를 저장하는 객체입니다.
      * @return 데이터를 추가한 후 리다이렉트할 URL입니다.
      */
     @PostMapping("/add")
@@ -83,6 +98,7 @@ public class BloodPressureController {
     /**
      * GET 요청 메서드입니다.
      * "/bloodpressure/data" URL로 요청하면, 저장된 모든 혈압 데이터를 표시합니다.
+     *
      * @param model 뷰로 데이터를 전달하기 위한 객체입니다.
      * @return "bloodpressure/bloodpressuredata" 페이지를 반환하거나, 에러가 발생하면 메인 페이지로 리다이렉트합니다.
      */
@@ -103,6 +119,7 @@ public class BloodPressureController {
     /**
      * GET 요청 메서드입니다.
      * "/bloodpressure/chart" URL로 요청하면, 혈압 데이터 차트를 표시합니다.
+     *
      * @param model 뷰로 데이터를 전달하기 위한 객체입니다.
      * @return "bloodpressure/bloodpressurechart" 페이지를 반환하거나, 에러 시 데이터 페이지로 리다이렉트합니다.
      */
@@ -149,6 +166,21 @@ public class BloodPressureController {
             e.printStackTrace();
             model.addAttribute("error", "차트 데이터를 불러오는 데 실패했습니다.");
             return "redirect:/bloodpressure/data";
+        }
+    }
+
+    @PutMapping("/update")
+    @ResponseBody
+    public ResponseEntity<?> updateBloodPressure(@RequestBody BloodPressureDTO dto,
+                                                 Authentication authentication) {
+        try {
+            Member member = memberRepository.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            bloodPressureService.updateBloodPressure(dto, member);
+            return ResponseEntity.ok().body(Map.of("message", "성공적으로 수정되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

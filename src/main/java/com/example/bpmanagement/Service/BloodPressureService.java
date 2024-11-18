@@ -37,14 +37,19 @@ import java.time.format.DateTimeFormatter;        // 날짜/시간 형식 지정
 import java.time.format.DateTimeParseException;   // 날짜/시간 파싱 예외
 import java.util.ArrayList;                       // 동적 배열
 import java.util.List;                           // 리스트 인터페이스
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j          // 로깅을 위한 Logger 객체를 자동으로 생성
 @Service        // 이 클래스가 서비스 계층임을 Spring에 알림
 @Transactional  // 모든 public 메서드에 트랜잭션 처리를 자동으로 적용
 public class BloodPressureService {
 
+    private final BloodPressureRepository bloodPressureRepository;
+
     // 수기 입력과 자동 측정 데이터를 통합하여 표현하기 위한 내부 클래스
-    @Getter @Setter  // 모든 필드에 대한 getter/setter 메서드 자동 생성
+    @Getter
+    @Setter  // 모든 필드에 대한 getter/setter 메서드 자동 생성
     public class CombinedBloodPressureData {
         private LocalDateTime measureDatetime;  // 측정 일시를 저장
         private int systolic;                   // 수축기 혈압 값을 저장
@@ -52,6 +57,11 @@ public class BloodPressureService {
         private int pulse;                      // 맥박 수를 저장
         private String remark;                  // 비고 사항을 저장
         private String source;                  // 데이터 출처 (수기입력/자동측정)를 구분하여 저장
+        private Long id;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
     }
 
     // 회원별 최근 측정 기록을 조회하는 메서드
@@ -92,11 +102,12 @@ public class BloodPressureService {
     @Autowired
     public BloodPressureService(BloodPressureRepository repository,
                                 BloodPressureDataRepository dataRepository,
-                                MemberRepository memberRepository) {
+                                MemberRepository memberRepository, BloodPressureRepository bloodPressureRepository) {
         // 각 Repository를 필드에 할당
         this.repository = repository;
         this.dataRepository = dataRepository;
         this.memberRepository = memberRepository;
+        this.bloodPressureRepository = bloodPressureRepository;
     }
 
     // 모든 혈압 기록을 조회하는 메서드
@@ -121,12 +132,16 @@ public class BloodPressureService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new SQLException("로그인한 사용자 정보를 찾을 수 없습니다."));
 
+
+        List<BloodPressureData> autoRecords = dataRepository.findByMemberIdOrderByMeasureDatetimeDesc(member.getId());
+
         // 1. 수기 입력 데이터 처리
         // 회원의 모든 수기 입력 데이터를 측정일시 내림차순으로 조회
         List<BloodPressure> manualRecords = repository.findAllByMemberOrderByMeasureDatetimeDesc(member);
         // 각 수기 입력 데이터를 통합 데이터 형식으로 변환
         for (BloodPressure record : manualRecords) {
             CombinedBloodPressureData combined = new CombinedBloodPressureData();
+            combined.setId(record.getId());
             combined.setMeasureDatetime(record.getMeasureDatetime());
             combined.setSystolic(record.getSystolic());
             combined.setDiastolic(record.getDiastolic());
@@ -138,10 +153,10 @@ public class BloodPressureService {
 
         // 2. 자동 측정 데이터 처리
         // 회원의 모든 자동 측정 데이터를 측정일시 내림차순으로 조회
-        List<BloodPressureData> autoRecords = dataRepository.findByMemberIdOrderByMeasureDatetimeDesc(member.getId());
-        // 각 자동 측정 데이터를 통합 데이터 형식으로 변환
+         // 각 자동 측정 데이터를 통합 데이터 형식으로 변환
         for (BloodPressureData record : autoRecords) {
             CombinedBloodPressureData combined = new CombinedBloodPressureData();
+            combined.setId(record.getId());
             combined.setMeasureDatetime(record.getMeasureDatetime());
             combined.setSystolic(record.getSystolic());
             combined.setDiastolic(record.getDiastolic());
@@ -244,6 +259,7 @@ public class BloodPressureService {
         for (BloodPressure record : manualRecords) {
             // 새로운 통합 데이터 객체 생성
             CombinedBloodPressureData combined = new CombinedBloodPressureData();
+            combined.setId(record.getId());
             combined.setMeasureDatetime(record.getMeasureDatetime());   // 측정일시 설정
             combined.setSystolic(record.getSystolic());                 // 수축기 혈압 설정
             combined.setDiastolic(record.getDiastolic());               // 이완기 혈압 설정
@@ -261,6 +277,7 @@ public class BloodPressureService {
         for (BloodPressureData record : autoRecords) {
             // 새로운 통합 데이터 객체 생성
             CombinedBloodPressureData combined = new CombinedBloodPressureData();
+            combined.setId(record.getId());
             combined.setMeasureDatetime(record.getMeasureDatetime());   // 측정일시 설정
             combined.setSystolic(record.getSystolic());                 // 수축기 혈압 설정
             combined.setDiastolic(record.getDiastolic());               // 이완기 혈압 설정
@@ -295,4 +312,89 @@ public class BloodPressureService {
         dto.setRemark(bloodPressure.getRemark());                     // 비고 복사
         return dto;                                                   // 변환된 DTO 반환
     }
+
+    @Transactional
+    public void updateBloodPressure(BloodPressureDTO dto, Member member) {
+        if (dto == null) {
+            throw new IllegalArgumentException("혈압 데이터가 null일 수 없습니다.");
+        }
+
+        // measureDatetime이 null인 경우 현재 시간으로 설정
+        LocalDateTime measureTime = (dto.getMeasureDatetime() != null)
+                ? dto.getMeasureDatetime()
+                : LocalDateTime.now();
+
+        // 기본값 설정 및 유효성 검사
+        if (dto.getSystolic() <= 0) {
+            throw new IllegalArgumentException("수축기 혈압은 0보다 커야 합니다.");
+        }
+        if (dto.getDiastolic() <= 0) {
+            throw new IllegalArgumentException("이완기 혈압은 0보다 커야 합니다.");
+        }
+        if (dto.getPulse() <= 0) {
+            throw new IllegalArgumentException("맥박은 0보다 커야 합니다.");
+        }
+
+        // 먼저 수기 입력 데이터에서 찾기
+        Optional<BloodPressure> manualRecord = repository.findById(dto.getId());
+
+        if (manualRecord.isPresent()) {
+            BloodPressure record = manualRecord.get();
+
+            // 권한 확인
+            if (!record.getMember().getId().equals(member.getId())) {
+                throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
+            }
+
+            try {
+                // 데이터 업데이트
+                record.setMeasureDatetime(measureTime);
+                record.setSystolic(dto.getSystolic());
+                record.setDiastolic(dto.getDiastolic());
+                record.setPulse(dto.getPulse());
+                record.setRemark(dto.getRemark() != null ? dto.getRemark() : "");
+
+                repository.save(record);
+                log.info("수기 입력 혈압 데이터 업데이트 성공: ID {}", dto.getId());
+                return;
+            } catch (Exception e) {
+                log.error("수기 입력 혈압 데이터 업데이트 실패: ID {}, 에러: {}", dto.getId(), e.getMessage());
+                throw new RuntimeException("혈압 데이터 업데이트 중 오류가 발생했습니다.", e);
+            }
+        }
+
+        // 수기 입력 데이터에서 찾지 못한 경우, 자동 측정 데이터에서 찾기
+        Optional<BloodPressureData> autoRecord = dataRepository.findById(dto.getId());
+
+        if (autoRecord.isPresent()) {
+            BloodPressureData record = autoRecord.get();
+
+            // 권한 확인
+            if (!record.getMemberId().equals(member.getId())) {
+                throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
+            }
+
+            try {
+                // 데이터 업데이트
+                record.setMeasureDatetime(measureTime);
+                record.setSystolic(dto.getSystolic());
+                record.setDiastolic(dto.getDiastolic());
+                record.setPulse(dto.getPulse());
+                record.setRemark(dto.getRemark() != null ? dto.getRemark() : "");
+
+                dataRepository.save(record);
+                log.info("자동 측정 혈압 데이터 업데이트 성공: ID {}", dto.getId());
+                return;
+            } catch (Exception e) {
+                log.error("자동 측정 혈압 데이터 업데이트 실패: ID {}, 에러: {}", dto.getId(), e.getMessage());
+                throw new RuntimeException("혈압 데이터 업데이트 중 오류가 발생했습니다.", e);
+            }
+        }
+
+        // 두 저장소 모두에서 데이터를 찾지 못한 경우
+        log.error("혈압 데이터를 찾을 수 없음: ID {}", dto.getId());
+        throw new NoSuchElementException("해당 ID의 혈압 데이터를 찾을 수 없습니다.");
+    }
+
 }
+

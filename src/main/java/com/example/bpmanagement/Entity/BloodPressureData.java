@@ -50,6 +50,9 @@ public class BloodPressureData {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "measure_datetime", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)  // timestamp 타입 명시
+
     // 엔티티가 생성되기 전에 자동으로 실행되는 메서드
     @PrePersist
     protected void onCreate() {
