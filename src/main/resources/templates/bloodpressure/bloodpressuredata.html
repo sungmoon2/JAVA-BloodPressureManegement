@@ -34,12 +34,28 @@
             position: relative;
             padding-top: 40px;
         }
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 모달 스타일 */
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
 <div class="container mt-5">
     <div class="top-button-container">
-        <a th:href="@{/}" class="btn btn-secondary">뒤로가기</a>
+        <a th:href="@{/members/mypage}" class="btn btn-secondary">뒤로가기</a>
         <a th:href="@{/bloodpressure/add}" class="btn btn-primary">혈압 데이터 추가하기</a>
         <a th:href="@{/bloodpressure/chart}" class="btn btn-primary">차트로 보기</a>
     </div>
@@ -64,7 +80,15 @@
         <tr th:if="${#lists.isEmpty(bloodpressuredata)}">
             <td colspan="6" class="text-center">저장된 혈압 데이터가 없습니다.</td>
         </tr>
-        <tr th:each="record : ${bloodpressuredata}">
+        <tr th:each="record : ${bloodpressuredata}"
+            class="clickable-row"
+            th:data-id="${record.id}"
+            th:data-datetime="${#temporals.format(record.measureDatetime, 'yyyy-MM-dd''T''HH:mm')}"
+            th:data-systolic="${record.systolic}"
+            th:data-diastolic="${record.diastolic}"
+            th:data-pulse="${record.pulse}"
+            th:data-remark="${record.remark}"
+            onclick="openEditModal(this)">
             <td th:text="${#temporals.format(record.measureDatetime, 'yyyy-MM-dd HH:mm:ss')}"></td>
             <td th:text="${record.systolic}"></td>
             <td th:text="${record.diastolic}"></td>
@@ -79,8 +103,123 @@
     </table>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<!-- 수정 모달 -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">혈압 데이터 수정</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label for="editDateTime">측정 날짜</label>
+                        <input type="datetime-local" class="form-control" id="editDateTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSystolic">수축기 혈압</label>
+                        <input type="number" class="form-control" id="editSystolic" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDiastolic">이완기 혈압</label>
+                        <input type="number" class="form-control" id="editDiastolic" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPulse">맥박</label>
+                        <input type="number" class="form-control" id="editPulse" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRemark">특이사항</label>
+                        <textarea class="form-control" id="editRemark" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">저장</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function openEditModal(element) {
+        const id = element.getAttribute('data-id');
+        const datetime = element.getAttribute('data-datetime');
+        const systolic = element.getAttribute('data-systolic');
+        const diastolic = element.getAttribute('data-diastolic');
+        const pulse = element.getAttribute('data-pulse');
+        const remark = element.getAttribute('data-remark');
+
+        // 모달 필드에 값 설정
+        document.getElementById('editId').value = id;
+        document.getElementById('editDateTime').value = datetime;
+        document.getElementById('editSystolic').value = systolic;
+        document.getElementById('editDiastolic').value = diastolic;
+        document.getElementById('editPulse').value = pulse;
+        document.getElementById('editRemark').value = remark;
+
+        // 모달 표시
+        $('#editModal').modal('show');
+    }
+
+    function saveChanges() {
+        const formData = {
+            id: document.getElementById('editId').value,
+            measureDatetime: document.getElementById('editDateTime').value,
+            systolic: parseInt(document.getElementById('editSystolic').value),
+            diastolic: parseInt(document.getElementById('editDiastolic').value),
+            pulse: parseInt(document.getElementById('editPulse').value),
+            remark: document.getElementById('editRemark').value
+        };
+
+        // AJAX 요청으로 데이터 업데이트
+        fetch('/api/bloodpressure/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert('수정이 완료되었습니다.');
+                    location.reload(); // 페이지 새로고침
+                } else {
+                    throw new Error('수정에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                alert(error.message);
+            })
+            .finally(() => {
+                $('#editModal').modal('hide');
+            });
+    }
+
+    // 숫자 입력 필드의 유효성 검사
+    document.getElementById('editSystolic').addEventListener('input', function() {
+        if (this.value < 0) this.value = 0;
+        if (this.value > 300) this.value = 300;
+    });
+
+    document.getElementById('editDiastolic').addEventListener('input', function() {
+        if (this.value < 0) this.value = 0;
+        if (this.value > 200) this.value = 200;
+    });
+
+    document.getElementById('editPulse').addEventListener('input', function() {
+        if (this.value < 0) this.value = 0;
+        if (this.value > 200) this.value = 200;
+    });
+</script>
 </body>
 </html>

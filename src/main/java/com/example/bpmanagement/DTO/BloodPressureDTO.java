@@ -4,6 +4,13 @@ import java.time.LocalDateTime;
 
 public class BloodPressureDTO {
 
+    public Long getId() {
+        return this.id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
+    private Long id;
     // 측정 날짜와 시간
     private LocalDateTime measureDatetime;
     // 수축기 혈압 (Systolic blood pressure)

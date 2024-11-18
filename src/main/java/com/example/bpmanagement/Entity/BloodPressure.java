@@ -20,6 +20,10 @@ public class BloodPressure {
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // 기본 키 값은 데이터베이스에서 자동 증가됩니다.
     private Long id;
 
+    public Long getId() {
+        return this.id;
+    }
+
     @JsonIgnore  // 이 필드는 JSON 직렬화 시 무시됩니다. (순환 참조 방지)
     @ManyToOne(fetch = FetchType.LAZY)  // 여러 혈압 기록은 하나의 사용자(Member)와 연결됩니다.
     @JoinColumn(name = "member_id", nullable = false)  // 외래 키 설정, 혈압 기록이 특정 사용자와 연결되도록 합니다.
@@ -38,4 +42,14 @@ public class BloodPressure {
     private int pulse;  // 맥박 (예: 72)
 
     private String remark;  // 혈압 측정에 대한 추가 설명 (선택 사항)
+
+    @Column(name = "measure_datetime", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)  // timestamp 타입 명시
+
+    public void updateData(Integer systolic, Integer diastolic, Integer pulse, String remark) {
+        this.systolic = systolic;
+        this.diastolic = diastolic;
+        this.pulse = pulse;
+        this.remark = remark;
+    }
 }

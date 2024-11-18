@@ -4,7 +4,13 @@
   <title>혈압 데이터 차트</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0"></script>
+
+  <meta charset="UTF-8">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <style>
+    /* 차트 관련 스타일 */
     .chart-wrapper {
       position: relative;
       height: 400px;
@@ -12,18 +18,23 @@
       overflow-y: hidden;
       margin: 20px 0;
     }
+
     .chart-container {
       height: 100%;
       min-width: 100%;
     }
+
     .chart-container.large {
       min-width: 200%;
     }
+
+    /* 버튼과 범례 관련 스타일 */
     .button-container {
       position: absolute;
       top: 20px;
       right: 20px;
     }
+
     .legend-container {
       position: sticky;
       top: 0;
@@ -36,27 +47,115 @@
       justify-content: center;
       align-items: center;
       gap: 20px;
-      margin-top: 60px; /* 버튼 영역만큼 여백 추가 */
+      margin-top: 60px;
     }
+
     .legend-item {
       display: flex;
       align-items: center;
       gap: 5px;
     }
+
     .legend-color {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       display: inline-block;
     }
+
+    /* 모달 관련 스타일 */
+    .modal-dialog {
+      z-index: 1050;
+    }
+
+    .modal-backdrop {
+      z-index: 1040;
+    }
+
+    .modal-content {
+      border-radius: 8px;
+    }
+
+    .modal-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      padding: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    /* 폼 관련 스타일 */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+    }
+
+    .form-control:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    /* 버튼 스타일 */
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .btn-save,
+    .btn-cancel {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .btn-save {
+      background-color: #007bff;
+    }
+
+    .btn-cancel {
+      background-color: #6c757d;
+    }
   </style>
 </head>
 <body>
 <div class="container mt-5 position-relative">
   <div class="button-container">
-    <a th:href="@{/}" class="btn btn-secondary">뒤로가기</a>
+    <a th:href="@{/bloodpressure/data}" class="btn btn-secondary">뒤로가기</a>
     <a th:href="@{/bloodpressure/add}" class="btn btn-primary">혈압 데이터 추가하기</a>
-    <a th:href="@{/bloodpressure/chart}" class="btn btn-primary">차트로 보기</a>
   </div>
 
   <h2>혈압 데이터 차트</h2>
@@ -74,12 +173,6 @@
       <span class="legend-color" style="background-color: rgb(255,127,0)"></span>
       <span>맥박</span>
     </div>
-  </div>
-
-  <!-- 데이터 디버깅용 -->
-  <div style="display: none;">
-    <p th:text="${#lists.size(last24Hours)}">24시간 데이터 수</p>
-    <p th:text="${#lists.size(last7Days)}">7일 데이터 수</p>
   </div>
 
   <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
@@ -129,12 +222,134 @@
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">혈압 데이터 수정</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="editId" name="id">
+          <div class="form-group">
+            <label for="editMeasureDateTime">측정 날짜</label>
+            <input type="datetime-local" class="form-control" id="editMeasureDateTime" name="measureDateTime" required>
+          </div>
+          <div class="form-group">
+            <label for="editSystolic">수축기 혈압 (mmHg)</label>
+            <input type="number" class="form-control" id="editSystolic" name="systolic" required>
+          </div>
+          <div class="form-group">
+            <label for="editDiastolic">이완기 혈압 (mmHg)</label>
+            <input type="number" class="form-control" id="editDiastolic" name="diastolic" required>
+          </div>
+          <div class="form-group">
+            <label for="editPulse">맥박 (bpm)</label>
+            <input type="number" class="form-control" id="editPulse" name="pulse" required>
+          </div>
+          <div class="form-group">
+            <label for="editRemark">특이사항</label>
+            <textarea class="form-control" id="editRemark" name="remark" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" onclick="saveChanges()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+<script>
+  $(document).ready(function() {
+    // ESC 키로 모달 닫기
+    $(document).on('keydown', function(e) {
+      if (e.keyCode === 27) { // ESC key
+        $('#editModal').modal('hide');
+      }
+    });
+
+    // 모달 외부 클릭으로 닫기
+    $('#editModal').on('click', function(e) {
+      if ($(e.target).is('#editModal')) {
+        $('#editModal').modal('hide');
+      }
+    });
+
+    // 모달이 완전히 닫힌 후 실행
+    $('#editModal').on('hidden.bs.modal', function () {
+      $('.modal-backdrop').remove();
+      $('body').removeClass('modal-open');
+    });
+  });
+</script>
 <script th:inline="javascript">
-  /*<![CDATA[*/
+  function saveChanges() {
+    const id = document.getElementById('editId').value;
+    const data = {
+      id: id,
+      measureDateTime: document.getElementById('editMeasureDateTime').value,
+      systolic: document.getElementById('editSystolic').value,
+      diastolic: document.getElementById('editDiastolic').value,
+      pulse: document.getElementById('editPulse').value,
+      remark: document.getElementById('editRemark').value
+    };
+
+    const csrfToken = document.querySelector("meta[name='_csrf']").content;
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']").content;
+
+    fetch('/bloodpressure/update', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify(data)
+    })
+            .then(response => {
+              if (!response.ok) {
+                return response.json().then(err => {
+                  throw new Error(err.error || '수정에 실패했습니다.');
+                });
+              }
+              return response.json();
+            })
+            .then(data => {
+              alert(data.message);
+              $('#editModal').modal('hide');
+              location.reload();
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert(error.message);
+            });
+  }
+
+
+  // 유효성 검사 추가
+  document.getElementById('editSystolic').addEventListener('input', function() {
+    if (this.value < 0) this.value = 0;
+    if (this.value > 300) this.value = 300;
+  });
+
+  document.getElementById('editDiastolic').addEventListener('input', function() {
+    if (this.value < 0) this.value = 0;
+    if (this.value > 200) this.value = 200;
+  });
+
+  document.getElementById('editPulse').addEventListener('input', function() {
+    if (this.value < 0) this.value = 0;
+    if (this.value > 200) this.value = 200;
+  });
   // 데이터 가져오기
   const data24h = /*[[${last24Hours}]]*/ [];
   const data7d = /*[[${last7Days}]]*/ [];
@@ -194,22 +409,20 @@
       return;
     }
 
-    // 차트 기간 판단
     let period;
     if (canvasId === 'chart24h') period = '24h';
     else if (canvasId === 'chart7d') period = '7d';
     else if (canvasId === 'chart3m') period = '3m';
     else if (canvasId === 'chart6m') period = '6m';
 
-    // 데이터 포인트 수에 따라 차트 컨테이너 너비 조정
     const container = document.getElementById(canvasId).parentElement;
-    if (data.length > 50) {  // 데이터가 50개 이상이면
-      const width = Math.max(100, data.length * 20); // 각 데이터 포인트당 20px
+    if (data.length > 50) {
+      const width = Math.max(100, data.length * 20);
       container.style.width = width + 'px';
     }
 
     const ctx = document.getElementById(canvasId).getContext('2d');
-    new Chart(ctx, {
+    const chart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: data.map(d => formatDate(d.measureDatetime, period)),
@@ -234,49 +447,149 @@
             borderColor: 'rgb(255,127,0)',
             fill: false,
             tension: 0.1
-          }
+          },
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        onClick: function(event, elements) {
+          if (elements && elements.length > 0) {
+            const index = elements[0].index;
+            const clickedData = data[index];
+
+            // 디버깅을 위한 로그 추가
+            console.log('클릭한 데이터:', {
+              id: clickedData.id,
+              measureDatetime: clickedData.measureDatetime,
+              systolic: clickedData.systolic,
+              diastolic: clickedData.diastolic,
+              pulse: clickedData.pulse,
+              remark: clickedData.remark
+            });
+
+            // 서버로 전송되는 데이터 확인
+            console.log('서버로 전송될 데이터 형식:', {
+              id: clickedData.id,
+              measureDateTime: formatDateForInput(clickedData.measureDatetime),
+              systolic: clickedData.systolic,
+              diastolic: clickedData.diastolic,
+              pulse: clickedData.pulse,
+              remark: clickedData.remark || ''
+            });
+            // datetime-local input에 맞는 형식으로 날짜 변환
+            const formattedDateTime = formatDateForInput(clickedData.measureDatetime);
+
+            // 모달 필드 설정
+            document.getElementById('editId').value = clickedData.id;
+            document.getElementById('editMeasureDateTime').value = formattedDateTime;
+            document.getElementById('editSystolic').value = clickedData.systolic;
+            document.getElementById('editDiastolic').value = clickedData.diastolic;
+            document.getElementById('editPulse').value = clickedData.pulse;
+            document.getElementById('editRemark').value = clickedData.remark || '';
+
+            // Bootstrap 4 모달 표시
+            $('#editModal').modal('show');
+          }
+        },
         plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: title
-          },
           tooltip: {
             mode: 'index',
             intersect: false,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            titleColor: '#000',
+            bodyColor: '#000',
+            borderColor: '#ddd',
+            borderWidth: 1,
+            padding: 10,
             callbacks: {
               title: function(context) {
-                return new Date(data[context[0].dataIndex].measureDatetime)
-                        .toLocaleString('ko-KR');
+                const dataIndex = context[0].dataIndex;
+                const measureDate = new Date(data[dataIndex].measureDatetime);
+                return measureDate.toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                });
               },
               label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (context.parsed.y !== null) {
-                  label += context.parsed.y;
-                  if (label.includes('맥박')) {
-                    label += ' bpm';
-                  } else {
-                    label += ' mmHg';
-                  }
+                const dataIndex = context.dataIndex;
+                const value = context.raw;
+                let label = '';
+
+                switch(context.dataset.label) {
+                  case '수축기':
+                    label = `수축기: ${value} mmHg`;
+                    break;
+                  case '이완기':
+                    label = `이완기: ${value} mmHg`;
+                    break;
+                  case '맥박':
+                    label = `맥박: ${value} bpm`;
+                    break;
                 }
                 return label;
+              },
+              afterBody: function(context) {
+                const dataIndex = context[0].dataIndex;
+                const remark = data[dataIndex].remark;
+                return remark ? [`메모: ${remark}`] : [];
+              },
+              labelTextColor: function(context) {
+                return '#000';
+              }
+            },
+            titleFont: {
+              weight: 'bold'
+            }
+          },
+          // 기존 annotation 설정은 동일하게 유지
+          annotation: {
+            annotations: {
+              highSystolic: {
+                type: 'line',
+                yMin: 140,
+                yMax: 140,
+                borderColor: 'rgba(255, 0, 0, 0.3)',
+                borderWidth: 1,
+                borderDash: [3, 3],
+                drawTime: 'beforeDatasetsDraw'
+              },
+              highDiastolic: {
+                type: 'line',
+                yMin: 90,
+                yMax: 90,
+                borderColor: 'rgba(255, 0, 0, 0.3)',
+                borderWidth: 1,
+                borderDash: [3, 3],
+                drawTime: 'beforeDatasetsDraw'
+              },
+              lowSystolic: {
+                type: 'line',
+                yMin: 90,
+                yMax: 90,
+                borderColor: 'rgba(0, 0, 255, 0.3)',
+                borderWidth: 1,
+                borderDash: [3, 3],
+                drawTime: 'beforeDatasetsDraw'
+              },
+              lowDiastolic: {
+                type: 'line',
+                yMin: 60,
+                yMax: 60,
+                borderColor: 'rgba(0, 0, 255, 0.3)',
+                borderWidth: 1,
+                borderDash: [3, 3],
+                drawTime: 'beforeDatasetsDraw'
               }
             }
+          },
+          legend: {
+            display: false
           }
-        },
-        interaction: {
-          mode: 'index',
-          intersect: false
         },
         scales: {
           x: {
@@ -292,22 +605,85 @@
             beginAtZero: false,
             min: 40,
             max: 200,
+            position: 'left',
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: function(context) {
+                if (context.tick.value === 140 || context.tick.value === 90 || context.tick.value === 60) {
+                  return 'rgba(0, 0, 0, 0.2)';
+                }
+                return 'rgba(0, 0, 0, 0.1)';
+              }
+            },
+            ticks: {
+              stepSize: 10,
+              callback: function(value) {
+                if (value === 140) {
+                  return '고혈압 수축기 기준 - ' + value;
+                } else if (value === 90) {
+                  return ' 고혈압 이완기/저혈압 수축기 기준 - ' + value;
+                } else if (value === 60) {
+                  return '저혈압 이완기 기준 - ' + value;
+                }
+                return value;
+              }
             }
           }
         }
       }
     });
+
+    return chart;
+  }
+  function updateBloodPressure(data) {
+
+    const csrfToken = document.querySelector("meta[name='_csrf']").content;
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']").content;
+
+    fetch('/api/bloodpressure/update', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrfHeader]: csrfToken
+      },
+      body: JSON.stringify(data)
+    })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Update failed');
+              }
+              location.reload();
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('데이터 수정에 실패했습니다.');
+            });
+  }
+
+  function formatDateForInput(dateTimeStr) {
+    const date = new Date(dateTimeStr);
+    return date.toISOString().slice(0, 16); // yyyy-MM-ddThh:mm 형식으로 반환
   }
 
   // DOM이 로드된 후 차트 생성
   document.addEventListener('DOMContentLoaded', function() {
-    createChart('chart24h', data24h, '최근 24시간');
-    createChart('chart7d', data7d, '최근 7일');
-    createChart('chart3m', data3m, '최근 3개월');
-    createChart('chart6m', data6m, '최근 6개월');
+    let charts = {};
+    let selectedDataIndex = null;
+
+    charts.chart24h = createChart('chart24h', data24h, '최근 24시간');
+    charts.chart7d = createChart('chart7d', data7d, '최근 7일');
+    charts.chart3m = createChart('chart3m', data3m, '최근 3개월');
+    charts.chart6m = createChart('chart6m', data6m, '최근 6개월');
   });
+  function showEditModal(data) {
+    document.getElementById('editId').value = data.id;
+    document.getElementById('editMeasureDateTime').value = data.measureDateTime;
+    document.getElementById('editSystolic').value = data.systolic;
+    document.getElementById('editDiastolic').value = data.diastolic;
+    document.getElementById('editPulse').value = data.pulse;
+    document.getElementById('editRemark').value = data.remark || '';
+
+    $('#editModal').modal('show');
+  }
   /*]]>*/
 </script>
 </body>
