@@ -18,9 +18,13 @@ import com.example.bpmanagement.Service.BloodPressureService.CombinedBloodPressu
 import lombok.RequiredArgsConstructor;
 
 // `Controller`는 Spring MVC에서 이 클래스가 컨트롤러 역할을 한다는 것을 나타냅니다.
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 // `Model`은 뷰(HTML) 페이지로 데이터를 전달할 때 사용하는 객체입니다.
@@ -38,6 +42,9 @@ import java.time.LocalDateTime;
 // `List`는 데이터를 리스트 형태로 저장하고 관리하기 위해 사용합니다.
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
+@Slf4j
 
 // @Controller 어노테이션을 사용하면 Spring이 이 클래스를 웹 요청을 처리하는 컨트롤러로 인식합니다.
 @Controller
@@ -170,17 +177,51 @@ public class BloodPressureController {
     }
 
     @PutMapping("/update")
-    @ResponseBody
-    public ResponseEntity<?> updateBloodPressure(@RequestBody BloodPressureDTO dto,
-                                                 Authentication authentication) {
+    public ResponseEntity<Map<String, String>> updateBloodPressure(
+            @RequestBody BloodPressureDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Member member = memberRepository.findByUsername(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            Member member = memberRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
             bloodPressureService.updateBloodPressure(dto, member);
-            return ResponseEntity.ok().body(Map.of("message", "성공적으로 수정되었습니다."));
+
+            Map<String, String> response = Map.of("message", "성공적으로 수정되었습니다.");
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "데이터 수정 중 오류가 발생했습니다."));
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")  // 경로가 /bloodpressure/delete/{id}가 됨
+    @ResponseBody
+    public ResponseEntity<String> deleteBloodPressure(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Member member = memberRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+            bloodPressureService.deleteBloodPressure(id, member);
+            return ResponseEntity.ok().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("데이터 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 }
