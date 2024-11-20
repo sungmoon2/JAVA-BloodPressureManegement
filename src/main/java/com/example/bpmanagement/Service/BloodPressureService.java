@@ -153,7 +153,7 @@ public class BloodPressureService {
 
         // 2. 자동 측정 데이터 처리
         // 회원의 모든 자동 측정 데이터를 측정일시 내림차순으로 조회
-         // 각 자동 측정 데이터를 통합 데이터 형식으로 변환
+        // 각 자동 측정 데이터를 통합 데이터 형식으로 변환
         for (BloodPressureData record : autoRecords) {
             CombinedBloodPressureData combined = new CombinedBloodPressureData();
             combined.setId(record.getId());
@@ -175,62 +175,51 @@ public class BloodPressureService {
     }
 
     // 새로운 혈압 기록을 추가하는 메서드
+    @Transactional
     public void addBloodPressureRecord(BloodPressureDTO recordDTO) throws SQLException {
-        // 현재 인증된 사용자 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username;
-
-        // Principal 객체 타입에 따라 사용자명 추출
-        if (authentication.getPrincipal() instanceof UserDetails) {
-            username = ((UserDetails) authentication.getPrincipal()).getUsername();
-        } else {
-            username = authentication.getName();
-        }
-
-        // 사용자명으로 회원 정보 조회
-        Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new SQLException("로그인한 사용자 정보를 찾을 수 없습니다."));
-
-        // 새로운 혈압 기록 엔티티 생성
-        BloodPressure record = new BloodPressure();
-        record.setMember(member);                           // 회원 정보 설정
-        record.setSystolic(recordDTO.getSystolic());        // 수축기 혈압 설정
-        record.setDiastolic(recordDTO.getDiastolic());      // 이완기 혈압 설정
-        record.setPulse(recordDTO.getPulse());              // 맥박 설정
-        record.setRemark(recordDTO.getRemark());            // 비고 설정
-
-        // 측정일시 처리
-        String inputDate = String.valueOf(recordDTO.getMeasureDatetime());
-        if (inputDate != null && !inputDate.isEmpty()) {
-            boolean parsed = false;
-            // 정의된 모든 날짜 형식으로 파싱 시도
-            for (DateTimeFormatter formatter : DATE_FORMATTERS) {
-                try {
-                    LocalDateTime measureDatetime = LocalDateTime.parse(inputDate, formatter);
-                    record.setMeasureDatetime(measureDatetime);
-                    parsed = true;
-                    break;
-                } catch (DateTimeParseException e) {
-                    // 파싱 실패 시 디버그 로그 기록
-                    log.debug("Date parsing failed with formatter {}: {}", formatter, inputDate);
-                }
-            }
-            // 모든 형식으로 파싱 실패 시 예외 발생
-            if (!parsed) throw new SQLException("Invalid date format: " + inputDate);
-        } else {
-            // 측정일시가 없으면 현재 시간으로 설정
-            record.setMeasureDatetime(LocalDateTime.now());
-        }
-
-        // 데이터베이스에 저장 시도
         try {
-            repository.save(record);
+            // 입력값 유효성 검사
+            if (recordDTO.getMeasureDatetime() == null) {
+                throw new IllegalArgumentException("측정 날짜/시간은 필수 입력값입니다.");
+            }
+
+            // 로그 추가
+            log.info("Adding blood pressure record: {}", recordDTO);
+
+            // 현재 인증된 사용자 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            // 사용자명으로 회원 정보 조회
+            Member member = memberRepository.findByUsername(username)
+                    .orElseThrow(() -> new SQLException("로그인한 사용자 정보를 찾을 수 없습니다."));
+
+            // 새로운 혈압 기록 엔티티 생성
+            BloodPressure record = BloodPressure.builder()
+                    .member(member)
+                    .measureDatetime(recordDTO.getMeasureDatetime())
+                    .systolic(recordDTO.getSystolic())
+                    .diastolic(recordDTO.getDiastolic())
+                    .pulse(recordDTO.getPulse())
+                    .remark(recordDTO.getRemark())
+                    .build();
+
+            // 저장하기 전 로그
+            log.info("Attempting to save blood pressure record: measureDatetime={}, systolic={}, diastolic={}, pulse={}",
+                    record.getMeasureDatetime(),
+                    record.getSystolic(),
+                    record.getDiastolic(),
+                    record.getPulse());
+
+            // 저장
+            BloodPressure savedRecord = repository.save(record);
+
             // 저장 성공 로그
-            log.info("Blood pressure record saved successfully for user {}", username);
+            log.info("Successfully saved blood pressure record with id: {}", savedRecord.getId());
+
         } catch (Exception e) {
-            // 저장 실패 시 에러 로그 기록 후 예외 발생
-            log.error("Error saving blood pressure record for user {}: {}", username, e.getMessage());
-            throw new SQLException("Error saving blood pressure data", e);
+            log.error("Failed to save blood pressure record: {}", e.getMessage());
+            throw new SQLException("Error saving blood pressure data: " + e.getMessage());
         }
     }
 
@@ -315,14 +304,14 @@ public class BloodPressureService {
 
     @Transactional
     public void updateBloodPressure(BloodPressureDTO dto, Member member) {
-        if (dto == null) {
+        if (dto == null || dto.getId() == null) {
             throw new IllegalArgumentException("혈압 데이터가 null일 수 없습니다.");
         }
 
-        // measureDatetime이 null인 경우 현재 시간으로 설정
-        LocalDateTime measureTime = (dto.getMeasureDatetime() != null)
-                ? dto.getMeasureDatetime()
-                : LocalDateTime.now();
+        // measureDatetime null 체크
+        if (dto.getMeasureDatetime() == null) {
+            throw new IllegalArgumentException("측정 날짜/시간은 null일 수 없습니다.");
+        }
 
         // 기본값 설정 및 유효성 검사
         if (dto.getSystolic() <= 0) {
@@ -335,26 +324,33 @@ public class BloodPressureService {
             throw new IllegalArgumentException("맥박은 0보다 커야 합니다.");
         }
 
-        // 먼저 수기 입력 데이터에서 찾기
+        // ID로 먼저 수기 입력 데이터에서 찾기
         Optional<BloodPressure> manualRecord = repository.findById(dto.getId());
+        log.info("Attempting to find manual record with ID: {}", dto.getId());
 
         if (manualRecord.isPresent()) {
             BloodPressure record = manualRecord.get();
 
             // 권한 확인
             if (!record.getMember().getId().equals(member.getId())) {
+                log.error("Authorization failed for manual record - Record owner: {}, Requester: {}",
+                        record.getMember().getUsername(), member.getUsername());
                 throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
             }
 
             try {
                 // 데이터 업데이트
-                record.setMeasureDatetime(measureTime);
+                record.setMeasureDatetime(dto.getMeasureDatetime());
                 record.setSystolic(dto.getSystolic());
                 record.setDiastolic(dto.getDiastolic());
                 record.setPulse(dto.getPulse());
                 record.setRemark(dto.getRemark() != null ? dto.getRemark() : "");
 
                 repository.save(record);
+
+                // 캐시나 임시 데이터를 초기화하는 로직 추가
+                repository.flush();
+
                 log.info("수기 입력 혈압 데이터 업데이트 성공: ID {}", dto.getId());
                 return;
             } catch (Exception e) {
@@ -363,26 +359,33 @@ public class BloodPressureService {
             }
         }
 
-        // 수기 입력 데이터에서 찾지 못한 경우, 자동 측정 데이터에서 찾기
+        // ID로 자동 측정 데이터에서 찾기
         Optional<BloodPressureData> autoRecord = dataRepository.findById(dto.getId());
+        log.info("Attempting to find auto record with ID: {}", dto.getId());
 
         if (autoRecord.isPresent()) {
             BloodPressureData record = autoRecord.get();
 
             // 권한 확인
             if (!record.getMemberId().equals(member.getId())) {
+                log.error("Authorization failed for auto record - Record owner: {}, Requester: {}",
+                        record.getMemberId(), member.getId());
                 throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
             }
 
             try {
                 // 데이터 업데이트
-                record.setMeasureDatetime(measureTime);
+                record.setMeasureDatetime(dto.getMeasureDatetime());
                 record.setSystolic(dto.getSystolic());
                 record.setDiastolic(dto.getDiastolic());
                 record.setPulse(dto.getPulse());
                 record.setRemark(dto.getRemark() != null ? dto.getRemark() : "");
 
                 dataRepository.save(record);
+
+                // 캐시나 임시 데이터를 초기화하는 로직 추가
+                dataRepository.flush();
+
                 log.info("자동 측정 혈압 데이터 업데이트 성공: ID {}", dto.getId());
                 return;
             } catch (Exception e) {
@@ -393,8 +396,56 @@ public class BloodPressureService {
 
         // 두 저장소 모두에서 데이터를 찾지 못한 경우
         log.error("혈압 데이터를 찾을 수 없음: ID {}", dto.getId());
+        throw new NoSuchElementException("해당 ID의 혈압 데이터를 찾을 수 없습니다: " + dto.getId());
+    }
+
+    @Transactional
+    public void deleteBloodPressure(Long id, Member member) {
+        // 먼저 수기 입력 데이터에서 찾기
+        Optional<BloodPressure> manualRecord = repository.findById(id);
+
+        if (manualRecord.isPresent()) {
+            BloodPressure record = manualRecord.get();
+
+            // 권한 확인
+            if (!record.getMember().getId().equals(member.getId())) {
+                throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
+            }
+
+            try {
+                repository.delete(record);
+                log.info("수기 입력 혈압 데이터 삭제 성공: ID {}", id);
+                return;
+            } catch (Exception e) {
+                log.error("수기 입력 혈압 데이터 삭제 실패: ID {}, 에러: {}", id, e.getMessage());
+                throw new RuntimeException("혈압 데이터 삭제 중 오류가 발생했습니다.", e);
+            }
+        }
+
+        // 수기 입력 데이터에서 찾지 못한 경우, 자동 측정 데이터에서 찾기
+        Optional<BloodPressureData> autoRecord = dataRepository.findById(id);
+
+        if (autoRecord.isPresent()) {
+            BloodPressureData record = autoRecord.get();
+
+            // 권한 확인
+            if (!record.getMemberId().equals(member.getId())) {
+                throw new SecurityException("해당 데이터에 대한 접근 권한이 없습니다.");
+            }
+
+            try {
+                dataRepository.delete(record);
+                log.info("자동 측정 혈압 데이터 삭제 성공: ID {}", id);
+                return;
+            } catch (Exception e) {
+                log.error("자동 측정 혈압 데이터 삭제 실패: ID {}, 에러: {}", id, e.getMessage());
+                throw new RuntimeException("혈압 데이터 삭제 중 오류가 발생했습니다.", e);
+            }
+        }
+
+        // 두 저장소 모두에서 데이터를 찾지 못한 경우
+        log.error("삭제할 혈압 데이터를 찾을 수 없음: ID {}", id);
         throw new NoSuchElementException("해당 ID의 혈압 데이터를 찾을 수 없습니다.");
     }
 
 }
-

@@ -25,4 +25,3 @@ public interface BloodPressureRepository extends JpaRepository<BloodPressure, Lo
 
 };
 
-
