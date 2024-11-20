@@ -241,7 +241,7 @@
 </div>
 
 <!-- 수정 모달 -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+<div id="editModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -252,38 +252,33 @@
       </div>
       <div class="modal-body">
         <form id="editForm">
-          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-          <input type="hidden" id="editId" name="id">
+          <input type="hidden" id="editId">
           <div class="form-group">
             <label for="editDateTime">측정 날짜</label>
-            <input type="datetime-local" class="form-control" id="editDateTime" name="measureDatetime" required>
+            <input type="datetime-local" class="form-control" id="editDateTime" required>
           </div>
           <div class="form-group">
             <label for="editSystolic">수축기 혈압 (mmHg)</label>
-            <input type="number" class="form-control" id="editSystolic" name="systolic" required min="0" max="300">
+            <input type="number" class="form-control" id="editSystolic" min="0" max="300" required>
           </div>
           <div class="form-group">
             <label for="editDiastolic">이완기 혈압 (mmHg)</label>
-            <input type="number" class="form-control" id="editDiastolic" name="diastolic" required min="0" max="200">
+            <input type="number" class="form-control" id="editDiastolic" min="0" max="200" required>
           </div>
           <div class="form-group">
             <label for="editPulse">맥박 (bpm)</label>
-            <input type="number" class="form-control" id="editPulse" name="pulse" required min="0" max="200">
+            <input type="number" class="form-control" id="editPulse" min="0" max="200" required>
           </div>
           <div class="form-group">
             <label for="editRemark">특이사항</label>
-            <textarea class="form-control" id="editRemark" name="remark" rows="3"></textarea>
+            <textarea class="form-control" id="editRemark" rows="3"></textarea>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-danger"
-                onclick="BloodPressureManager.deleteRecord(document.getElementById('editId').value)">
-          삭제
-        </button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
-          <button type="button" class="btn btn-primary" onclick="BloodPressureManager.saveChanges()">저장</button>
-        </div>
+        <button type="button" class="btn btn-danger" onclick="BloodPressureManager.deleteRecord(document.getElementById('editId').value)">삭제</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-primary" onclick="BloodPressureManager.saveChanges()">저장</button>
       </div>
     </div>
   </div>
@@ -731,22 +726,40 @@
 
   // DOM이 로드된 후 차트 생성
   document.addEventListener('DOMContentLoaded', function() {
-    if (typeof chartData === 'undefined') {
-      console.error('Chart data not initialized');
-      return;
+    // 1. 저장된 탭 처리
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+      const tab = document.getElementById(savedTab);
+      if (tab) {
+        tab.click();
+      }
+      localStorage.removeItem('activeTab');
     }
 
-    try {
-      const charts = {
-        chart24h: createChart('chart24h', chartData.data24h, '24h'),
-        chart7d: createChart('chart7d', chartData.data7d, '7d'),
-        chart3m: createChart('chart3m', chartData.data3m, '3m'),
-        chart6m: createChart('chart6m', chartData.data6m, '6m')
-      };
-      console.log('Charts created successfully:', charts);
-    } catch (error) {
-      console.error('Error creating charts:', error);
-    }
+    // 2. 차트 초기화
+    const initializeCharts = () => {
+      if (typeof chartData === 'undefined' || !chartData) {
+        console.error('Chart data not initialized');
+        return false;
+      }
+
+      try {
+        const charts = {
+          chart24h: createChart('chart24h', chartData.data24h, '24h'),
+          chart7d: createChart('chart7d', chartData.data7d, '7d'),
+          chart3m: createChart('chart3m', chartData.data3m, '3m'),
+          chart6m: createChart('chart6m', chartData.data6m, '6m')
+        };
+        console.log('Charts created successfully:', charts);
+        return true;
+      } catch (error) {
+        console.error('Error creating charts:', error);
+        return false;
+      }
+    };
+
+    // 차트 초기화 실행
+    initializeCharts();
   });
   function showEditModal(data) {
     document.getElementById('editId').value = data.id;
