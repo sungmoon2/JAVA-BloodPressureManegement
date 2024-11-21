@@ -146,7 +146,8 @@ const BloodPressureManager = {
                             'tab-24h': '#hours24',
                             'tab-7d': '#days7',
                             'tab-3m': '#months3',
-                            'tab-6m': '#months6'
+                            'tab-6m': '#months6',
+                            'tab-1y': '#years1'
                         };
 
                         const hash = activeTabId ? tabMapping[activeTabId] : '#hours24';

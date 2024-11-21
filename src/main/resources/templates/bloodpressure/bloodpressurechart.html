@@ -37,7 +37,7 @@
     }
 
     .chart-container.large {
-      min-width: 200%;
+      min-width: 2500px;
     }
 
     /* 버튼과 범례 관련 스타일 */
@@ -206,6 +206,9 @@
     <li class="nav-item">
       <a class="nav-link" id="tab-6m" data-toggle="tab" href="#months6" role="tab">6개월</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-1y" data-toggle="tab" href="#years1" role="tab">1년</a>
+    </li>
   </ul>
 
   <div class="tab-content" id="myTabContent">
@@ -218,7 +221,7 @@
     </div>
     <div class="tab-pane fade" id="days7" role="tabpanel">
       <div class="chart-wrapper">
-        <div class="chart-container">
+        <div class="chart-container large">
           <canvas id="chart7d"></canvas>
         </div>
       </div>
@@ -237,6 +240,21 @@
         </div>
       </div>
     </div>
+    <div class="tab-pane fade" id="years1" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container large">
+          <canvas id="chart1y"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 검색창 추가 -->
+<div class="search-container mb-3">
+  <div class="position-relative">
+    <input type="text" id="remarkSearch" class="form-control pl-4" placeholder="메모 검색...">
+    <i class="bi bi-search position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%);"></i>
   </div>
 </div>
 
@@ -420,7 +438,8 @@
     data24h: /*[[${last24Hours}]]*/ [],
     data7d: /*[[${last7Days}]]*/ [],
     data3m: /*[[${last3Months}]]*/ [],
-    data6m: /*[[${last6Months}]]*/ []
+    data6m: /*[[${last6Months}]]*/ [],
+    data1y: /*[[${last1Years}]]*/ []
   };
 
   function formatDate(dateString, period) {
@@ -447,7 +466,8 @@
 
       case '3m':
       case '6m':
-        // 3개월, 6개월 데이터: 년도가 다를 때만 "YYYY-MM-DD", 같으면 "MM-DD"
+      case '1y':
+        // 3개월, 6개월, 1년 데이터: 년도가 다를 때만 "YYYY-MM-DD", 같으면 "MM-DD"
         if (date.getFullYear() !== currentYear) {
           return date.toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -488,25 +508,71 @@
           {
             label: '수축기',
             data: data.map(d => d.systolic),
-            borderColor: 'rgb(255,0,0)',
+            borderColor: 'rgba(255,0,0,0.5)',  // 투명도 추가
+            backgroundColor: 'rgba(255,0,0,0.5)',
             fill: false,
-            tension: 0.1
+            tension: 0.1,
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(255,0,0,0.5)',
+            pointBorderColor: 'rgba(255,0,0,0.5)',
+            pointHoverBackgroundColor: 'rgb(255,0,0)',  // hover 시 진한 색
+            pointHoverBorderColor: 'rgb(255,0,0)',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2
           },
           {
             label: '이완기',
             data: data.map(d => d.diastolic),
-            borderColor: 'rgb(0,0,255)',
+            borderColor: 'rgba(0,0,255,0.5)',
+            backgroundColor: 'rgba(0,0,255,0.5)',
             fill: false,
-            tension: 0.1
+            tension: 0.1,
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(0,0,255,0.5)',
+            pointBorderColor: 'rgba(0,0,255,0.5)',
+            pointHoverBackgroundColor: 'rgb(0,0,255)',
+            pointHoverBorderColor: 'rgb(0,0,255)',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2
           },
           {
             label: '맥박',
             data: data.map(d => d.pulse),
-            borderColor: 'rgb(255,127,0)',
+            borderColor: 'rgba(255,127,0,0.5)',
+            backgroundColor: 'rgba(255,127,0,0.5)',
             fill: false,
-            tension: 0.1
+            tension: 0.1,
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(255,127,0,0.5)',
+            pointBorderColor: 'rgba(255,127,0,0.5)',
+            pointHoverBackgroundColor: 'rgb(255,127,0)',
+            pointHoverBorderColor: 'rgb(255,127,0)',
+            pointHoverRadius: 6,
+            pointHoverBorderWidth: 2
           }
         ]
+
+      // // 1. 기본 설정
+      // label: '수축기',  // 범례에 표시될 이름
+      //         data: data.map(d => d.systolic),  // 실제 데이터 값
+      //
+      //       // 2. 선 스타일
+      //       borderColor: 'rgba(255,0,0,0.5)',  // 선의 색상 (빨간색 50% 투명도)
+      //       backgroundColor: 'rgba(255,0,0,0.5)',  // 영역 색상 (fill: true일 때 사용)
+      //       fill: false,  // 선 아래 영역 채우기 비활성화
+      //       tension: 0.1,  // 선의 곡률 (0: 직선, 1: 최대 곡률)
+      //       borderWidth: 2,  // 선의 두께
+      //
+      //       // 3. 데이터 포인트(점) 기본 스타일
+      //       pointBackgroundColor: 'rgba(255,0,0,0.5)',  // 점의 내부 색상
+      //       pointBorderColor: 'rgba(255,0,0,0.5)',  // 점의 테두리 색상
+      //
+      //       // 4. 마우스 호버(hover) 효과
+      //       pointHoverBackgroundColor: 'rgb(255,0,0)',  // 마우스 올렸을 때 점 내부 색상
+      //       pointHoverBorderColor: 'rgb(255,0,0)',  // 마우스 올렸을 때 점 테두리 색상
+      //       pointHoverRadius: 6,  // 마우스 올렸을 때 점의 크기
+      //       pointHoverBorderWidth: 2  // 마우스 올렸을 때 점 테두리 두께
+
       },
       options: {
         responsive: true,
@@ -726,15 +792,40 @@
 
   // DOM이 로드된 후 차트 생성
   document.addEventListener('DOMContentLoaded', function() {
-    // 1. 저장된 탭 처리
-    const savedTab = localStorage.getItem('activeTab');
-    if (savedTab) {
-      const tab = document.getElementById(savedTab);
-      if (tab) {
-        tab.click();
+
+    const searchInput = document.getElementById('remarkSearch');
+    const charts = document.querySelectorAll('.chart-container');
+
+    searchInput.addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      // 1. 저장된 탭 처리
+      const savedTab = localStorage.getItem('activeTab');
+      if (savedTab) {
+        const tab = document.getElementById(savedTab);
+        if (tab) {
+          tab.click();
+        }
+        localStorage.removeItem('activeTab');
       }
-      localStorage.removeItem('activeTab');
-    }
+      // 각 차트의 데이터를 필터링
+      charts.forEach(chart => {
+        const chartInstance = echarts.getInstanceByDom(chart);
+        if (chartInstance) {
+          const originalData = chartInstance.getOption().dataset[0].source;
+          const filteredData = originalData.filter(item =>
+                  item.remark && item.remark.toLowerCase().includes(searchTerm)
+          );
+
+          // 필터링된 데이터로 차트 업데이트
+          chartInstance.setOption({
+            dataset: [{
+              source: searchTerm ? filteredData : originalData
+            }]
+          });
+        }
+      });
+    });
+
 
     // 2. 차트 초기화
     const initializeCharts = () => {
@@ -748,7 +839,8 @@
           chart24h: createChart('chart24h', chartData.data24h, '24h'),
           chart7d: createChart('chart7d', chartData.data7d, '7d'),
           chart3m: createChart('chart3m', chartData.data3m, '3m'),
-          chart6m: createChart('chart6m', chartData.data6m, '6m')
+          chart6m: createChart('chart6m', chartData.data6m, '6m'),
+          chart1y: createChart('chart1y', chartData.data1y, '1y')
         };
         console.log('Charts created successfully:', charts);
         return true;
