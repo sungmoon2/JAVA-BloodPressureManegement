@@ -206,6 +206,9 @@
     <li class="nav-item">
       <a class="nav-link" id="tab-6m" data-toggle="tab" href="#months6" role="tab">6개월</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-1y" data-toggle="tab" href="#years1" role="tab">1년</a>
+    </li>
   </ul>
 
   <div class="tab-content" id="myTabContent">
@@ -237,6 +240,21 @@
         </div>
       </div>
     </div>
+    <div class="tab-pane fade" id="years1" role="tabpanel">
+      <div class="chart-wrapper">
+        <div class="chart-container large">
+          <canvas id="chart1y"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 검색창 추가 -->
+<div class="search-container mb-3">
+  <div class="position-relative">
+    <input type="text" id="remarkSearch" class="form-control pl-4" placeholder="메모 검색...">
+    <i class="bi bi-search position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%);"></i>
   </div>
 </div>
 
@@ -420,7 +438,8 @@
     data24h: /*[[${last24Hours}]]*/ [],
     data7d: /*[[${last7Days}]]*/ [],
     data3m: /*[[${last3Months}]]*/ [],
-    data6m: /*[[${last6Months}]]*/ []
+    data6m: /*[[${last6Months}]]*/ [],
+    data1y: /*[[${last1Years}]]*/ []
   };
 
   function formatDate(dateString, period) {
@@ -447,7 +466,8 @@
 
       case '3m':
       case '6m':
-        // 3개월, 6개월 데이터: 년도가 다를 때만 "YYYY-MM-DD", 같으면 "MM-DD"
+      case '1y':
+        // 3개월, 6개월, 1년 데이터: 년도가 다를 때만 "YYYY-MM-DD", 같으면 "MM-DD"
         if (date.getFullYear() !== currentYear) {
           return date.toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -726,15 +746,40 @@
 
   // DOM이 로드된 후 차트 생성
   document.addEventListener('DOMContentLoaded', function() {
-    // 1. 저장된 탭 처리
-    const savedTab = localStorage.getItem('activeTab');
-    if (savedTab) {
-      const tab = document.getElementById(savedTab);
-      if (tab) {
-        tab.click();
+
+    const searchInput = document.getElementById('remarkSearch');
+    const charts = document.querySelectorAll('.chart-container');
+
+    searchInput.addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      // 1. 저장된 탭 처리
+      const savedTab = localStorage.getItem('activeTab');
+      if (savedTab) {
+        const tab = document.getElementById(savedTab);
+        if (tab) {
+          tab.click();
+        }
+        localStorage.removeItem('activeTab');
       }
-      localStorage.removeItem('activeTab');
-    }
+      // 각 차트의 데이터를 필터링
+      charts.forEach(chart => {
+        const chartInstance = echarts.getInstanceByDom(chart);
+        if (chartInstance) {
+          const originalData = chartInstance.getOption().dataset[0].source;
+          const filteredData = originalData.filter(item =>
+                  item.remark && item.remark.toLowerCase().includes(searchTerm)
+          );
+
+          // 필터링된 데이터로 차트 업데이트
+          chartInstance.setOption({
+            dataset: [{
+              source: searchTerm ? filteredData : originalData
+            }]
+          });
+        }
+      });
+    });
+
 
     // 2. 차트 초기화
     const initializeCharts = () => {
@@ -748,7 +793,8 @@
           chart24h: createChart('chart24h', chartData.data24h, '24h'),
           chart7d: createChart('chart7d', chartData.data7d, '7d'),
           chart3m: createChart('chart3m', chartData.data3m, '3m'),
-          chart6m: createChart('chart6m', chartData.data6m, '6m')
+          chart6m: createChart('chart6m', chartData.data6m, '6m'),
+          chart1y: createChart('chart1y', chartData.data1y, '1y')
         };
         console.log('Charts created successfully:', charts);
         return true;

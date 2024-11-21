@@ -136,7 +136,7 @@ public class BloodPressureController {
             // 현재 날짜와 시간을 가져옵니다.
             LocalDateTime now = LocalDateTime.now();
 
-            // 혈압 데이터를 다양한 기간(24시간, 7일, 3개월, 6개월) 동안 조회합니다.
+            // 혈압 데이터를 다양한 기간(24시간, 7일, 3개월, 6개월, 1년) 동안 조회합니다.
             List<CombinedBloodPressureData> last24Hours =
                     bloodPressureService.getBloodPressureRecordsByPeriod(now.minusHours(24), now);
             List<CombinedBloodPressureData> last7Days =
@@ -145,12 +145,15 @@ public class BloodPressureController {
                     bloodPressureService.getBloodPressureRecordsByPeriod(now.minusMonths(3), now);
             List<CombinedBloodPressureData> last6Months =
                     bloodPressureService.getBloodPressureRecordsByPeriod(now.minusMonths(6), now);
+            List<CombinedBloodPressureData> last1Years =
+                    bloodPressureService.getBloodPressureRecordsByPeriod(now.minusYears(1), now);
 
             // 데이터의 크기를 로그로 출력합니다.
             System.out.println("24시간 데이터 수: " + last24Hours.size());
             System.out.println("7일 데이터 수: " + last7Days.size());
             System.out.println("3개월 데이터 수: " + last3Months.size());
             System.out.println("6개월 데이터 수: " + last6Months.size());
+            System.out.println("1년 데이터 수: " + last1Years.size());
 
             // 첫 번째 데이터를 샘플로 출력합니다.
             if (!last24Hours.isEmpty()) {
@@ -165,6 +168,7 @@ public class BloodPressureController {
             model.addAttribute("last7Days", last7Days);
             model.addAttribute("last3Months", last3Months);
             model.addAttribute("last6Months", last6Months);
+            model.addAttribute("last1Years", last1Years);
 
             // "bloodpressure/bloodpressurechart" HTML 페이지를 반환합니다.
             return "bloodpressure/bloodpressurechart";
