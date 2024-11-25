@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 보기 - 혈압 관리 시스템</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1f2937;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .view-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .post-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .post-title {
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .post-info {
+            display: flex;
+            justify-content: space-between;
+            color: #6b7280;
+            font-size: 0.9rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .post-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .post-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+
+        .file-list {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .file-list h3 {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-item {
+            margin: 1rem 0;
+        }
+
+        .media-preview {
+            margin: 1rem 0;
+        }
+
+        .media-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .media-preview video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+        }
+
+        .file-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .file-item a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-list {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 640px) {
+            .view-container {
+                margin: 1rem;
+            }
+
+            .post-header,
+            .post-content,
+            .file-list {
+                padding: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="view-container">
+    <div class="post-header">
+        <h1 class="post-title" th:text="${board.title}"></h1>
+        <div class="post-info">
+            <div>
+                    <span>
+                        <i class="fas fa-user"></i>
+                        <span th:text="${board.memberUsername}"></span>
+                    </span>
+                <span>
+                        <i class="far fa-clock"></i>
+                        <span th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                    </span>
+            </div>
+            <span>
+                    <i class="fas fa-eye"></i>
+                    조회수: <span th:text="${board.viewCount}"></span>
+                </span>
+        </div>
+    </div>
+
+    <div class="post-content" th:text="${board.content}">
+    </div>
+
+    <div class="file-list" th:if="${not #lists.isEmpty(board.existingFiles)}">
+        <h3>
+            <i class="fas fa-paperclip"></i> 첨부파일
+        </h3>
+        <div th:each="file : ${board.existingFiles}" class="file-item">
+            <!-- 이미지 파일 -->
+            <div th:if="${file.fileType.startsWith('image/')}" class="media-preview">
+                <img th:src="@{'/uploads/' + ${file.storedFileName}}"
+                     th:alt="${file.originalFileName}">
+            </div>
+
+            <!-- 비디오 파일 -->
+            <div th:if="${file.fileType.startsWith('video/')}" class="media-preview">
+                <video controls>
+                    <source th:src="@{'/uploads/' + ${file.storedFileName}}"
+                            th:type="${file.fileType}">
+                    이 브라우저는 비디오 태그를 지원하지 않습니다.
+                </video>
+            </div>
+
+            <!-- 파일 다운로드 링크 -->
+            <a th:href="@{'/board/download/' + ${file.id}}">
+                <i class="fas fa-download"></i>
+                <span th:text="${file.originalFileName}"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <a th:href="@{/board/edit/{id}(id=${board.id})}"
+           class="btn btn-edit"
+           th:if="${#authentication.name == board.memberUsername}">
+            <i class="fas fa-edit"></i> 수정
+        </a>
+        <a th:href="@{/board/delete/{id}(id=${board.id})}"
+           class="btn btn-delete"
+           th:if="${#authentication.name == board.memberUsername}"
+           onclick="return confirm('정말 삭제하시겠습니까?')">
+            <i class="fas fa-trash"></i> 삭제
+        </a>
+        <a href="/board/list" class="btn btn-list">
+            <i class="fas fa-list"></i> 목록
+        </a>
+    </div>
+</div>
+</body>
+</html>
