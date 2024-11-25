@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 수정</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1f2937;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .edit-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .edit-title {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+        }
+
+        textarea {
+            height: 200px;
+            resize: vertical;
+        }
+
+        .existing-files {
+            padding: 1rem;
+            background-color: var(--background-color);
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .existing-files h3 {
+            font-size: 1.25rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-item {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-submit:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-cancel {
+            background-color: white;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-cancel:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            background-color: #fce4e4;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="edit-container">
+    <h2 class="edit-title">게시글 수정</h2>
+
+    <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+    <form th:action="@{/board/edit/{id}(id=${board.id})}"
+          method="post"
+          enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" name="title"
+                   th:value="${board.title}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" name="content"
+                      th:text="${board.content}" required></textarea>
+        </div>
+
+        <div class="existing-files" th:if="${not #lists.isEmpty(board.existingFiles)}">
+            <h3>기존 첨부파일</h3>
+            <div th:each="file : ${board.existingFiles}" class="file-item">
+                <span th:text="${file.originalFileName}"></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="files">새로운 파일 첨부</label>
+            <input type="file" id="files" name="files" multiple accept="image/*, video/*">
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-submit">수정</button>
+            <a th:href="@{/board/view/{id}(id=${board.id})}" class="btn btn-cancel">취소</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

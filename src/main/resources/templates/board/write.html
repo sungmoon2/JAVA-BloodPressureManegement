@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글쓰기 - 혈압 관리 시스템</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1f2937;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .write-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .write-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .write-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        .form-group input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--border-color);
+            color: var(--text-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-upload-label:hover {
+            background-color: #cbd5e1;
+        }
+
+        .file-upload-info {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .selected-files {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        @media (max-width: 640px) {
+            .write-form {
+                padding: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="write-container">
+    <h1 class="write-title">
+        <i class="fas fa-edit"></i> 글쓰기
+    </h1>
+
+    <form class="write-form" th:action="@{/board/write}" method="post"
+          enctype="multipart/form-data" th:object="${boardDTO}">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" name="title"
+                   placeholder="제목을 입력하세요" required
+                   th:field="*{title}">
+        </div>
+
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" name="content"
+                      placeholder="내용을 입력하세요" required
+                      th:field="*{content}"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="files" class="file-upload-label">
+                <i class="fas fa-cloud-upload-alt"></i> 파일 선택하기
+            </label>
+            <input type="file" id="files" name="files"
+                   multiple accept="image/*, video/*"
+                   onchange="updateFileList(this)">
+            <div class="file-upload-info">
+                * 이미지 파일과 동영상 파일만 업로드 가능합니다.
+            </div>
+            <div id="selectedFiles" class="selected-files"></div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> 등록
+            </button>
+            <a href="/board/list" class="btn btn-secondary">
+                <i class="fas fa-times"></i> 취소
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function updateFileList(input) {
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+        selectedFilesDiv.innerHTML = '';
+
+        if (input.files.length > 0) {
+            const fileList = document.createElement('ul');
+            fileList.style.listStyle = 'none';
+            fileList.style.padding = '0';
+
+            Array.from(input.files).forEach(file => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-file"></i> ${file.name}`;
+                li.style.marginBottom = '0.25rem';
+                fileList.appendChild(li);
+            });
+
+            selectedFilesDiv.appendChild(fileList);
+        } else {
+            selectedFilesDiv.innerHTML = '선택된 파일이 없습니다.';
+        }
+    }
+</script>
+</body>
+</html>

@@ -46,24 +46,30 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
-                        // 3. 혈압 데이터 관련 설정
+                        // 3. 파일 업로드 경로 설정
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // 4. 게시판 관련 설정
+                        .requestMatchers("/board/**").authenticated()
+
+                        // 5. 혈압 데이터 관련 설정
                         .requestMatchers(HttpMethod.PUT, "/bloodpressure/update").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/bloodpressure/delete/**").authenticated()
                         .requestMatchers("/bloodpressure/**").authenticated()
 
-                        // 4. API 엔드포인트 설정
+                        // 6. API 엔드포인트 설정
                         .requestMatchers("/api/bloodpressure/**").authenticated()
 
-                        // 5. 차트 관련 설정
+                        // 7. 차트 관련 설정
                         .requestMatchers("/chart/**").authenticated()
 
-                        // 6. 마이페이지 관련 설정
+                        // 8. 마이페이지 관련 설정
                         .requestMatchers(
                                 "/members/mypage/**",
                                 "/members/update/**"
                         ).authenticated()
 
-                        // 7. 나머지 모든 요청
+                        // 9. 그 외 모든 요청
                         .anyRequest().authenticated()
                 )
 

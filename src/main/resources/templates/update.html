@@ -2,164 +2,141 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원정보 수정</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1f2937;
+            --border-color: #e2e8f0;
+        }
+
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 1rem;
         }
 
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 2rem auto;
             background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         h2 {
-            color: #2c3e50;
-            margin-bottom: 30px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section-title {
+            font-size: 1.25rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1rem;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
             font-weight: 600;
-            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
         }
 
         input, select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
         }
 
         input[readonly] {
-            background-color: #f8f9fa;
+            background-color: #f8fafc;
             cursor: not-allowed;
         }
 
-        input[type="number"] {
-            width: 200px;
-        }
-
         .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
             font-weight: 600;
+            text-align: center;
             text-decoration: none;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
+            transition: background-color 0.3s ease;
+            border: 1px solid transparent;
         }
 
         .btn-primary {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
+            border-color: var(--primary-color);
         }
 
         .btn-primary:hover {
-            background-color: #2980b9;
+            background-color: var(--secondary-color);
         }
 
         .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
+            background-color: white;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
         .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .nav-buttons {
-            margin-top: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+            margin-top: 2rem;
         }
 
-        /* 폼 섹션 스타일 */
-        .form-section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
+        .password-hint {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
         }
 
-        .form-section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        /* 입력 필드 placeholder 스타일 */
-        input::placeholder {
-            color: #adb5bd;
-        }
-
-        /* 필수 입력 필드 표시 */
         .required-field::after {
             content: " *";
             color: #e74c3c;
-        }
-
-        /* 비밀번호 설명 텍스트 스타일 */
-        .password-hint {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
         }
     </style>
 </head>
@@ -167,83 +144,45 @@
 <div class="container">
     <h2>회원정보 수정</h2>
 
-    <!-- 메시지 표시 -->
-    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-
-    <!-- 회원 정보 수정 폼 -->
     <form th:action="@{/members/update}" method="post">
-        <!-- 기본 정보 섹션 -->
         <div class="form-section">
             <div class="form-section-title">기본 정보</div>
-
             <div class="form-group">
                 <label for="username" class="required-field">아이디</label>
                 <input type="text" id="username" name="username" th:value="${member.username}" readonly>
             </div>
-
             <div class="form-group">
                 <label for="name" class="required-field">이름</label>
                 <input type="text" id="name" name="name" th:value="${member.name}" required>
             </div>
-
             <div class="form-group">
                 <label for="email" class="required-field">이메일</label>
                 <input type="email" id="email" name="email" th:value="${member.email}" required>
             </div>
-
             <div class="form-group">
                 <label for="phoneNumber" class="required-field">전화번호</label>
-                <input type="tel" id="phoneNumber" name="phoneNumber" th:value="${member.phoneNumber}"
-                       pattern="[0-9]{11}" placeholder="'-' 없이 숫자만 입력 (예: 01012345678)" required>
+                <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="'-' 없이 숫자만 입력" required>
             </div>
         </div>
 
-        <!-- 비밀번호 섹션 -->
         <div class="form-section">
             <div class="form-section-title">비밀번호 변경</div>
-
             <div class="form-group">
                 <label for="password">새 비밀번호</label>
                 <input type="password" id="password" name="password">
                 <div class="password-hint">변경하지 않으려면 비워두세요</div>
             </div>
-
             <div class="form-group">
                 <label for="passwordConfirm">비밀번호 확인</label>
                 <input type="password" id="passwordConfirm" name="passwordConfirm">
             </div>
         </div>
 
-        <!-- 추가 정보 섹션 -->
         <div class="form-section">
             <div class="form-section-title">추가 정보</div>
-
             <div class="form-group">
                 <label for="age" class="required-field">나이</label>
-                <input type="number" id="age" name="age" th:value="${member.age}" required min="1" max="150">
-            </div>
-
-            <div class="form-group">
-                <label for="height" class="required-field">키 (cm)</label>
-                <input type="number" id="height" name="height" th:value="${member.height}"
-                       step="0.1" required min="1" max="300">
-            </div>
-
-            <div class="form-group">
-                <label for="weight" class="required-field">몸무게 (kg)</label>
-                <input type="number" id="weight" name="weight" th:value="${member.weight}"
-                       step="0.1" required min="1" max="500">
-            </div>
-
-            <div class="form-group">
-                <label for="gender" class="required-field">성별</label>
-                <select id="gender" name="gender" required>
-                    <option value="">선택하세요</option>
-                    <option value="MALE" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).MALE}">남성</option>
-                    <option value="FEMALE" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).FEMALE}">여성</option>
-                    <option value="UNKNOWN" th:selected="${member.gender == T(com.example.bpmanagement.Entity.Gender).UNKNOWN}">선택안함</option>
-                </select>
+                <input type="number" id="age" name="age" th:value="${member.age}" required>
             </div>
         </div>
 
