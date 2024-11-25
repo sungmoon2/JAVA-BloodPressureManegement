@@ -1,116 +1,288 @@
-<!-- addbloodpressure.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>혈압 데이터 추가</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>혈압 데이터 추가 - 혈압 관리 시스템</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* 전체 컨테이너 스타일 */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --text-color: #1f2937;
+            --border-color: #e2e8f0;
+            --warning-color: #f59e0b;
+            --success-color: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
         .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 20px;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            position: relative;
         }
 
         .form-control {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        .input-with-icon {
+            padding-left: 2.5rem;
+        }
+
+        .normal-range {
+            font-size: 0.875rem;
+            color: var(--warning-color);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
         .button-container {
-            margin-top: 30px;
             display: flex;
-            gap: 10px;
+            gap: 1rem;
+            margin-top: 2rem;
         }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
+            flex: 1;
+            padding: 0.75rem 1.5rem;
             border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
         }
 
         .btn-primary {
-            background-color: #007bff;
+            background-color: var(--primary-color);
             color: white;
         }
 
         .btn-secondary {
-            background-color: #6c757d;
+            background-color: #6b7280;
             color: white;
-            text-decoration: none;
         }
 
         .btn:hover {
+            transform: translateY(-1px);
             opacity: 0.9;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                margin: 1rem;
+                padding: 0;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>혈압 데이터 추가</h2>
+    <div class="card">
+        <h1 class="page-title">
+            <i class="fas fa-heart"></i> 혈압 데이터 추가
+        </h1>
 
-    <form th:action="@{/bloodpressure/add}" method="post">
-        <div class="form-group">
-            <label for="measureDatetime">측정 날짜 및 시간:</label>
-            <input type="datetime-local" class="form-control"
-                   id="measureDatetime" name="measureDatetime" required>
-        </div>
+        <form th:action="@{/bloodpressure/add}" method="post">
+            <div class="form-group">
+                <label for="measureDatetime">
+                    <i class="fas fa-calendar"></i> 측정 날짜 및 시간
+                </label>
+                <div class="input-group">
+                    <input type="datetime-local"
+                           id="measureDatetime"
+                           name="measureDatetime"
+                           class="form-control input-with-icon"
+                           required>
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="systolic">수축기 혈압 (mmHg):</label>
-            <input type="number" class="form-control"
-                   id="systolic" name="systolic"
-                   min="0" max="300" required>
-        </div>
+            <div class="form-group">
+                <label for="systolic">
+                    <i class="fas fa-arrow-up"></i> 수축기 혈압
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           id="systolic"
+                           name="systolic"
+                           class="form-control"
+                           required
+                           min="0"
+                           max="300">
+                    <span class="input-unit">mmHg</span>
+                </div>
+                <div class="normal-range">
+                    <i class="fas fa-info-circle"></i>
+                    정상 범위: 90-120 mmHg
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="diastolic">이완기 혈압 (mmHg):</label>
-            <input type="number" class="form-control"
-                   id="diastolic" name="diastolic"
-                   min="0" max="200" required>
-        </div>
+            <div class="form-group">
+                <label for="diastolic">
+                    <i class="fas fa-arrow-down"></i> 이완기 혈압
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           id="diastolic"
+                           name="diastolic"
+                           class="form-control"
+                           required
+                           min="0"
+                           max="200">
+                    <span class="input-unit">mmHg</span>
+                </div>
+                <div class="normal-range">
+                    <i class="fas fa-info-circle"></i>
+                    정상 범위: 60-80 mmHg
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="pulse">맥박 (bpm):</label>
-            <input type="number" class="form-control"
-                   id="pulse" name="pulse"
-                   min="0" max="200" required>
-        </div>
+            <div class="form-group">
+                <label for="pulse">
+                    <i class="fas fa-heartbeat"></i> 맥박
+                </label>
+                <div class="input-group">
+                    <input type="number"
+                           id="pulse"
+                           name="pulse"
+                           class="form-control"
+                           required
+                           min="0"
+                           max="200">
+                    <span class="input-unit">bpm</span>
+                </div>
+                <div class="normal-range">
+                    <i class="fas fa-info-circle"></i>
+                    정상 범위: 60-100 bpm
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="remark">특이사항:</label>
-            <textarea class="form-control" id="remark" name="remark" rows="3"></textarea>
-        </div>
+            <div class="form-group">
+                <label for="remark">
+                    <i class="fas fa-sticky-note"></i> 특이사항
+                </label>
+                <textarea id="remark"
+                          name="remark"
+                          class="form-control"
+                          rows="3"
+                          placeholder="특이사항이 있다면 입력해주세요"></textarea>
+            </div>
 
-        <div class="button-container">
-            <a th:href="@{/bloodpressure/data}" class="btn btn-secondary">뒤로가기</a>
-            <button type="submit" class="btn btn-primary">추가하기</button>
-        </div>
-    </form>
+            <div class="button-container">
+                <a th:href="@{/bloodpressure/data}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 뒤로가기
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 추가하기
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
-<script th:inline="javascript">
-    // 페이지 로드 시 현재 날짜/시간을 기본값으로 설정
-    document.addEventListener('DOMContentLoaded', function() {
+
+<script>
+    // 현재 날짜와 시간을 기본값으로 설정
+    window.onload = function() {
         const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // 시간대 조정
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('measureDatetime').value = now.toISOString().slice(0, 16);
-    });
+    };
 </script>
-
-</form>
-</div>
 </body>
 </html>

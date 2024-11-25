@@ -2,17 +2,18 @@ package com.example.bpmanagement.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // PasswordEncoder Bean 추가
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -21,16 +22,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF 보호 활성화 (기본값)
+                // CSRF 설정
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**")) // REST API 엔드포인트는 CSRF 검사 제외
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/**"))
 
                 .authorizeHttpRequests(auth -> auth
-                        // 정적 리소스 허용
-                        .requestMatchers("/css/**", "/js/**", "/images/**",
-                                "/webjars/**", "/assets/**").permitAll()
+                        // 1. 정적 리소스 설정
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/assets/**"
+                        ).permitAll()
 
-                        // 공개 페이지 허용
+                        // 2. 공개 페이지 설정
                         .requestMatchers(
                                 "/",
                                 "/members/login",
@@ -39,20 +46,30 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
-                        // API 엔드포인트 설정
-                        .requestMatchers("/api/bloodpressure/**").authenticated()
+                        // 3. 파일 업로드 경로 설정
+                        .requestMatchers("/uploads/**").permitAll()
 
-                        // 혈압 관련 페이지 설정
+                        // 4. 게시판 관련 설정
+                        .requestMatchers("/board/**").authenticated()
+
+                        // 5. 혈압 데이터 관련 설정
+                        .requestMatchers(HttpMethod.PUT, "/bloodpressure/update").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/bloodpressure/delete/**").authenticated()
                         .requestMatchers("/bloodpressure/**").authenticated()
 
-                        // 차트 관련 설정
+                        // 6. API 엔드포인트 설정
+                        .requestMatchers("/api/bloodpressure/**").authenticated()
+
+                        // 7. 차트 관련 설정
                         .requestMatchers("/chart/**").authenticated()
 
-                        // 마이페이지 관련 설정
-                        .requestMatchers("/members/mypage/**",
-                                "/members/update/**").authenticated()
+                        // 8. 마이페이지 관련 설정
+                        .requestMatchers(
+                                "/members/mypage/**",
+                                "/members/update/**"
+                        ).authenticated()
 
-                        // 그 외 모든 요청은 인증 필요
+                        // 9. 그 외 모든 요청
                         .anyRequest().authenticated()
                 )
 

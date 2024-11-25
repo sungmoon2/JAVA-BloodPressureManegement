@@ -2,7 +2,9 @@
 package com.example.bpmanagement.Controller;
 
 // 필요한 클래스 및 패키지 import
+import com.example.bpmanagement.DTO.BoardDTO;
 import com.example.bpmanagement.DTO.MemberDTO; // 회원 정보를 담는 DTO 클래스
+import com.example.bpmanagement.Service.BoardService;
 import com.example.bpmanagement.Service.RegisterService; // 회원가입 관련 서비스 클래스
 import com.example.bpmanagement.Service.LoginService; // 로그인 관련 서비스 클래스
 import lombok.RequiredArgsConstructor; // Lombok에서 final 필드에 대해 자동으로 생성자를 생성해주는 어노테이션
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Controller; // Spring MVC에서 이 클래
 import org.springframework.ui.Model; // 뷰에 데이터를 전달하기 위한 객체
 import org.springframework.web.bind.annotation.*; // 요청 처리 관련 어노테이션 (GET, POST 등)
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; // 리다이렉트 시 메시지 전달을 위한 객체
+
+import java.util.List;
 
 // @Slf4j: 로그를 기록하기 위한 Lombok 어노테이션
 @Slf4j
@@ -29,12 +33,18 @@ public class MemberController {
     // RegisterService 인스턴스 주입 (DI)
     private final RegisterService RegisterService;
 
+    // BoardService 주입 추가
+    private final BoardService boardService;
+
     /**
      * 메인 페이지 요청 처리
      * @return 메인 페이지 뷰 이름 ("index.html" 파일)
      */
     @GetMapping("/")
-    public String index() {
+    public String index(Model model) {
+        // 최근 게시글 10개를 가져와서 모델에 추가
+        List<BoardDTO> recentPosts = boardService.getRecentPosts(10);
+        model.addAttribute("recentPosts", recentPosts);
         return "index";
     }
 
