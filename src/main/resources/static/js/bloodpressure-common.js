@@ -63,6 +63,8 @@ const BloodPressureManager = {
         $('#editModal').modal('show');
     },
 
+
+
     // 저장 함수
     saveChanges: function() {
         try {
@@ -101,6 +103,7 @@ const BloodPressureManager = {
             if (!this.validateData(formData)) {
                 return;
             }
+
 
             // CSRF 토큰 가져오기
             const token = document.querySelector("meta[name='_csrf']").content;
@@ -267,9 +270,109 @@ const BloodPressureManager = {
         }
 
         return true;
-    }
+    },
 
-    };
+    // 피드백 요청 처리
+    requestFeedback: function(period) {
+        const loadingDiv = document.getElementById('feedbackLoading');
+        const contentDiv = document.getElementById('feedbackContent');
+
+        if (!loadingDiv || !contentDiv) {
+            console.error('피드백 관련 DOM 요소를 찾을 수 없습니다.');
+            return;
+        }
+
+        // 모달 표시 및 로딩 시작
+        $('#feedbackModal').modal('show');
+        loadingDiv.style.display = 'block';
+        contentDiv.innerHTML = '';
+
+        // API 호출
+        fetch(`/api/feedback/${period}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('피드백 요청 실패');
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = data.feedback.replace(/\n/g, '<br>');
+            })
+            .catch(error => {
+                console.error('피드백 요청 오류:', error);
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = '피드백 생성 중 오류가 발생했습니다. 다시 시도해주세요.';
+            });
+    },
+
+    // 피드백을 이미지로 저장
+    saveFeedbackAsImage: function() {
+        const feedbackContent = document.getElementById('feedbackContent');
+        if (!feedbackContent) {
+            console.error('피드백 내용을 찾을 수 없습니다.');
+            return;
+        }
+
+        html2canvas(feedbackContent, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            logging: true,
+            onclone: function(clonedDoc) {
+                const clonedContent = clonedDoc.getElementById('feedbackContent');
+                if (clonedContent) {
+                    clonedContent.style.padding = '20px';
+                }
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = '혈압_피드백_' + new Date().toLocaleDateString() + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(error => {
+            console.error('이미지 저장 실패:', error);
+            alert('이미지 저장에 실패했습니다.');
+        });
+    },
+
+    // 피드백을 클립보드에 복사
+    copyFeedbackToClipboard: function() {
+        const feedbackContent = document.getElementById('feedbackContent');
+        if (!feedbackContent) {
+            console.error('피드백 내용을 찾을 수 없습니다.');
+            return;
+        }
+
+        const text = feedbackContent.innerText;
+
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                alert('피드백이 클립보드에 복사되었습니다.');
+            })
+            .catch(err => {
+                console.error('클립보드 복사 실패:', err);
+
+                // 대체 복사 방법 시도
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+
+                try {
+                    document.execCommand('copy');
+                    alert('피드백이 클립보드에 복사되었습니다.');
+                } catch (e) {
+                    console.error('대체 복사 방법 실패:', e);
+                    alert('클립보드 복사에 실패했습니다.');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            });
+    },
+
+}
+
+
 
 // 숫자 입력 필드의 유효성 검사 이벤트 리스너
 document.addEventListener('DOMContentLoaded', function() {
