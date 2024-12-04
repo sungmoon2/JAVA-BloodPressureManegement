@@ -1,6 +1,7 @@
 // `com.example.bpmanagement.Controller` 패키지 안에 있는 클래스를 정의합니다.
 package com.example.bpmanagement.Controller;
 
+import com.example.bpmanagement.Service.BloodPressureService.CombinedBloodPressureData;
 // 필요한 클래스 및 패키지를 import 합니다.
 
 // `BloodPressureDTO`는 혈압 데이터를 전송하거나 받기 위해 사용하는 Data Transfer Object 클래스입니다.
@@ -12,17 +13,14 @@ import com.example.bpmanagement.Repository.MemberRepository;
 import com.example.bpmanagement.Service.BloodPressureService;
 
 // `CombinedBloodPressureData`는 혈압 데이터를 조합하여 사용할 때 사용하는 내부 클래스입니다.
-import com.example.bpmanagement.Service.BloodPressureService.CombinedBloodPressureData;
 
 // `RequiredArgsConstructor`는 Lombok 라이브러리를 사용하여 final 필드에 대한 생성자를 자동으로 생성해 줍니다.
-import lombok.RequiredArgsConstructor;
 
 // `Controller`는 Spring MVC에서 이 클래스가 컨트롤러 역할을 한다는 것을 나타냅니다.
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;

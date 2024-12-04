@@ -168,15 +168,6 @@ public class MemberController {
                                Authentication authentication,
                                RedirectAttributes redirectAttributes) {
         try {
-            // 비밀번호 확인
-            if (memberDTO.getPassword() != null && !memberDTO.getPassword().isEmpty()) {
-                if (!memberDTO.getPassword().equals(memberDTO.getPasswordConfirm())) {
-                    log.error("비밀번호 불일치");
-                    redirectAttributes.addFlashAttribute("error", "비밀번호가 일치하지 않습니다.");
-                    return "redirect:/members/update";
-                }
-            }
-
             // 사용자 이름 설정
             memberDTO.setUsername(authentication.getName());
             loginService.updateMember(memberDTO);

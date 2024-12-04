@@ -2,20 +2,23 @@ package com.example.bpmanagement.Service;
 
 import com.example.bpmanagement.Service.BloodPressureService.CombinedBloodPressureData;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@Primary
-public class MockBloodPressureFeedbackService implements OpenAIBloodPressureFeedbackService {
+//@Primary
+public class MockFeedbackService implements BloodPressureFeedbackService {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    @Override
+    public String testApiConnection() {
+        return "Mock Service Test Response - API 테스트가 필요하지 않습니다.";
+    }
 
     @Override
     public String generateFeedback(List<CombinedBloodPressureData> data, String period) {
