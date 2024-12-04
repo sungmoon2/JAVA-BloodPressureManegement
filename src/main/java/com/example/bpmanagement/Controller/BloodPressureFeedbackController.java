@@ -1,7 +1,8 @@
 package com.example.bpmanagement.Controller;
 
-import com.example.bpmanagement.Service.OpenAIBloodPressureFeedbackService;
+import com.example.bpmanagement.Service.BloodPressureFeedbackService;
 import com.example.bpmanagement.Service.BloodPressureService;
+import com.example.bpmanagement.Service.GeminiFeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +16,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BloodPressureFeedbackController {
 
-    private final OpenAIBloodPressureFeedbackService feedbackService;
+    private final BloodPressureFeedbackService feedbackService;
     private final BloodPressureService bloodPressureService;
+    private final GeminiFeedbackService geminiFeedbackService;
+
+    @GetMapping("/test-api")
+    public ResponseEntity<String> testApi() {
+        String result = feedbackService.testApiConnection();
+        return ResponseEntity.ok(result);
+    }
 
     @GetMapping("/{period}")
     public ResponseEntity<?> getFeedback(@PathVariable String period) {

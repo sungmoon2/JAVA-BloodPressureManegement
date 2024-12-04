@@ -42,15 +42,23 @@ public class LoginService {
                 });
 
         // 현재 사용자의 아이디 외에 동일한 전화번호를 가진 사용자가 있는지 검증
-        memberRepository.findByPhoneNumberAndUsernameNot(memberDTO.getPhoneNumber(), memberDTO.getUsername())
-                .ifPresent(m -> {
-                    throw new RuntimeException("이미 사용 중인 전화번호입니다.");
-                });
+        // 전화번호가 입력된 경우에만 중복 검증 수행
+        if (memberDTO.getPhoneNumber() != null && !memberDTO.getPhoneNumber().trim().isEmpty()) {
+            memberRepository.findByPhoneNumberAndUsernameNot(memberDTO.getPhoneNumber(), memberDTO.getUsername())
+                    .ifPresent(m -> {
+                        throw new RuntimeException("이미 사용 중인 전화번호입니다.");
+                    });
+        }
     }
 
     // 회원 정보 업데이트 메서드
     private void updateMemberInfo(Member member, MemberDTO memberDTO) {
         // 비밀번호 변경이 필요한 경우: 비밀번호 확인 및 암호화 후 업데이트
+        //        비밀번호 필드가 비어있으면 → 기존 비밀번호 유지
+        //        비밀번호를 입력했다면:
+        //        비밀번호와 확인용 비밀번호가 일치하는지 검사
+        //        일치하면 → 새 비밀번호를 암호화해서 저장
+        //        불일치하면 → 에러 발생
         if (memberDTO.getPassword() != null && !memberDTO.getPassword().isEmpty()) {
             if (!memberDTO.getPassword().equals(memberDTO.getPasswordConfirm())) {
                 throw new RuntimeException("비밀번호가 일치하지 않습니다.");  // 비밀번호 불일치 시 예외 발생
@@ -58,11 +66,16 @@ public class LoginService {
             member.updatePassword(passwordEncoder.encode(memberDTO.getPassword()));  // 비밀번호 암호화 후 저장
         }
 
+        // 전화번호 변경 처리 (새로 추가)
+        String phoneNumber = memberDTO.getPhoneNumber() != null && !memberDTO.getPhoneNumber().trim().isEmpty()
+                ? memberDTO.getPhoneNumber()
+                : member.getPhoneNumber();  // 비어있으면 기존 번호 유지
+
         // 회원의 나머지 정보를 업데이트
         member.updateInfo(
                 memberDTO.getName(),  // 이름 업데이트
                 memberDTO.getEmail(),  // 이메일 업데이트
-                memberDTO.getPhoneNumber(),  // 전화번호 업데이트
+                phoneNumber,  // 변경된 또는 기존 전화번호 사용
                 memberDTO.getAge(),  // 나이 업데이트
                 memberDTO.getHeight(),  // 키 업데이트
                 memberDTO.getWeight(),  // 몸무게 업데이트
