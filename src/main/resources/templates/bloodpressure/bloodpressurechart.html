@@ -18,6 +18,9 @@
   <!-- 공통 JavaScript 파일을 마지막에 로드 -->
   <script src="/js/bloodpressure-common.js"></script>
 
+  <!--  html2canvas CDN 추가  -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <meta charset="UTF-8">
   <meta name="_csrf" th:content="${_csrf.token}"/>
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
@@ -222,6 +225,7 @@
     <div class="tab-pane fade" id="days7" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container large">
+          <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('7d')">피드백 요청</button>
           <canvas id="chart7d"></canvas>
         </div>
       </div>
@@ -229,6 +233,7 @@
     <div class="tab-pane fade" id="months3" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container large">
+          <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('3m')">피드백 요청</button>
           <canvas id="chart3m"></canvas>
         </div>
       </div>
@@ -236,6 +241,7 @@
     <div class="tab-pane fade" id="months6" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container large">
+          <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('6m')">피드백 요청</button>
           <canvas id="chart6m"></canvas>
         </div>
       </div>
@@ -243,6 +249,7 @@
     <div class="tab-pane fade" id="years1" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container large">
+          <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('1y')">피드백 요청</button>
           <canvas id="chart1y"></canvas>
         </div>
       </div>
@@ -293,6 +300,35 @@
     </div>
   </div>
 </div>
+
+<!-- 피드백 모달 -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedbackModalLabel">혈압 데이터 분석 피드백</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="feedbackContent" class="mb-4" style="white-space: pre-line;"></div>
+        <div id="feedbackLoading" class="text-center" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">피드백 생성 중...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="BloodPressureManager.saveFeedbackAsImage()">이미지로 저장</button>
+        <button type="button" class="btn btn-primary" onclick="BloodPressureManager.copyFeedbackToClipboard()">클립보드에 복사</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
   $(document).ready(function() {
@@ -841,7 +877,7 @@
 
     // 차트 초기화 실행
     initializeCharts();
-  
+
   function showEditModal(data) {
     document.getElementById('editId').value = data.id;
     document.getElementById('editDateTime').value = data.measureDateTime;
