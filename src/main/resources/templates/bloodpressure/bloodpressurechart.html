@@ -26,12 +26,31 @@
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <style>
     /* 차트 관련 스타일 */
+
     .chart-wrapper {
       position: relative;
-      height: 400px;
+      height: 450px;     /* 500px에서 감소 */
       overflow-x: auto;
       overflow-y: hidden;
-      margin: 20px 0;
+      margin: 20px 0 0 0;
+    }
+
+    .chart-wrapper canvas {
+      margin-bottom: 0;  /* 캔버스 자체의 마진 제거 */
+    }
+
+    /* 스크롤바 스타일링 */
+    .chart-wrapper::-webkit-scrollbar {
+      height: 10px;  /* 스크롤바 높이 */
+    }
+
+    .chart-wrapper::-webkit-scrollbar-track {
+      background: #f1f1f1;  /* 스크롤바 트랙 배경 */
+    }
+
+    .chart-wrapper::-webkit-scrollbar-thumb {
+      background: #888;  /* 스크롤바 색상 */
+      border-radius: 5px;  /* 스크롤바 모서리 둥글게 */
     }
 
     .chart-container {
@@ -40,7 +59,15 @@
     }
 
     .chart-container.large {
-      min-width: 2500px;
+      margin-bottom: 0;    /* 30px에서 0으로 변경 */
+      min-width: 3000px;
+      height: 400px;      /* 450px에서 감소 */
+    }
+
+    .chart-area {
+      width: 100%;
+      height: calc(100% - 10px);  /* 30px에서 10px로 감소 */
+      padding-bottom: 10px;       /* 20px에서 10px로 감소 */
     }
 
     /* 버튼과 범례 관련 스타일 */
@@ -170,6 +197,20 @@
     .btn-cancel {
       background-color: #6c757d;
     }
+
+    .data-warning {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .data-feedback {
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -218,15 +259,43 @@
     <div class="tab-pane fade show active" id="hours24" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container">
-          <canvas id="chart24h"></canvas>
+          <div class="data-warning" style="display: none;">
+            <div class="alert alert-warning" role="alert">
+              <h6 class="alert-heading">데이터가 부족합니다</h6>
+              <p class="mb-0">의미 있는 추세를 보기 위해서는 최소 2개 이상의 측정값이 필요합니다.</p>
+              <p class="mb-0 next-measurement"></p>
+            </div>
+          </div>
+          <div class="chart-area">
+            <canvas id="chart24h"></canvas>
+          </div>
+          <div class="data-feedback" style="display: none;">
+            <small class="text-muted">
+              더 정확한 추세를 보기 위해서는 더 많은 측정값이 필요합니다.
+            </small>
+          </div>
         </div>
       </div>
     </div>
     <div class="tab-pane fade" id="days7" role="tabpanel">
       <div class="chart-wrapper">
         <div class="chart-container large">
-          <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('7d')">피드백 요청</button>
-          <canvas id="chart7d"></canvas>
+          <div class="data-warning" style="display: none;">
+            <div class="alert alert-warning" role="alert">
+              <h6 class="alert-heading">데이터가 부족합니다</h6>
+              <p class="mb-0 " >의미 있는 추세를 보기 위해서는 최소 2개 이상의 측정값이 필요합니다.</p>
+              <p class="mb-0 next-measurement"></p>
+            </div>
+          </div>
+          <div class="chart-area">
+            <button type="button" class="btn btn-info feedback-btn" onclick="BloodPressureManager.requestFeedback('7d')">피드백 요청</button>
+            <canvas id="chart7d"></canvas>
+          </div>
+          <div class="data-feedback" style="display: none;">
+            <small class="text-muted">
+              더 정확한 추세를 보기 위해서는 더 많은 측정값이 필요합니다.
+            </small>
+          </div>
         </div>
       </div>
     </div>
@@ -361,7 +430,47 @@
     });
   });
 </script>
+
 <script th:inline="javascript">
+
+  function initializeChart(container, data) {
+    const warningElement = container.querySelector('.data-warning');
+    const chartArea = container.querySelector('.chart-area');
+    const feedbackElement = container.querySelector('.data-feedback');
+
+    if (!data || data.length < 2) {
+      warningElement.style.display = 'block';
+      chartArea.style.display = 'none';
+      const nextMeasurement = getNextMeasurementTime();
+      const nextMeasurementElement = warningElement.querySelector('.next-measurement');
+      nextMeasurementElement.textContent = `다음 측정 권장 시간: ${nextMeasurement}`;
+      return;
+    }
+
+    warningElement.style.display = 'none';
+    chartArea.style.display = 'block';
+
+    if (data.length < 4) {
+      feedbackElement.style.display = 'block';
+    } else {
+      feedbackElement.style.display = 'none';
+    }
+  }
+
+  function getNextMeasurementTime() {
+    const now = new Date();
+    const morning = new Date(now).setHours(9, 0, 0, 0);
+    const evening = new Date(now).setHours(21, 0, 0, 0);
+
+    if (now.getTime() < morning) {
+      return "오늘 오전 9시";
+    } else if (now.getTime() < evening) {
+      return "오늘 오후 9시";
+    } else {
+      return "내일 오전 9시";
+    }
+  }
+
   function deleteRecord() {
     console.log('deleteRecord 함수 호출됨'); // 디버깅용
 
@@ -536,14 +645,14 @@
           {
             label: '수축기',
             data: data.map(d => d.systolic),
-            borderColor: 'rgba(255,0,0,0.5)',  // 투명도 추가
+            borderColor: 'rgba(255,0,0,0.5)',
             backgroundColor: 'rgba(255,0,0,0.5)',
             fill: false,
             tension: 0.1,
             borderWidth: 2,
             pointBackgroundColor: 'rgba(255,0,0,0.5)',
             pointBorderColor: 'rgba(255,0,0,0.5)',
-            pointHoverBackgroundColor: 'rgb(255,0,0)',  // hover 시 진한 색
+            pointHoverBackgroundColor: 'rgb(255,0,0)',
             pointHoverBorderColor: 'rgb(255,0,0)',
             pointHoverRadius: 6,
             pointHoverBorderWidth: 2
@@ -579,42 +688,27 @@
             pointHoverBorderWidth: 2
           }
         ]
-
-        // // 1. 기본 설정
-        // label: '수축기',  // 범례에 표시될 이름
-        //         data: data.map(d => d.systolic),  // 실제 데이터 값
-        //
-        //       // 2. 선 스타일
-        //       borderColor: 'rgba(255,0,0,0.5)',  // 선의 색상 (빨간색 50% 투명도)
-        //       backgroundColor: 'rgba(255,0,0,0.5)',  // 영역 색상 (fill: true일 때 사용)
-        //       fill: false,  // 선 아래 영역 채우기 비활성화
-        //       tension: 0.1,  // 선의 곡률 (0: 직선, 1: 최대 곡률)
-        //       borderWidth: 2,  // 선의 두께
-        //
-        //       // 3. 데이터 포인트(점) 기본 스타일
-        //       pointBackgroundColor: 'rgba(255,0,0,0.5)',  // 점의 내부 색상
-        //       pointBorderColor: 'rgba(255,0,0,0.5)',  // 점의 테두리 색상
-        //
-        //       // 4. 마우스 호버(hover) 효과
-        //       pointHoverBackgroundColor: 'rgb(255,0,0)',  // 마우스 올렸을 때 점 내부 색상
-        //       pointHoverBorderColor: 'rgb(255,0,0)',  // 마우스 올렸을 때 점 테두리 색상
-        //       pointHoverRadius: 6,  // 마우스 올렸을 때 점의 크기
-        //       pointHoverBorderWidth: 2  // 마우스 올렸을 때 점 테두리 두께
-
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
           intersect: false,
-          mode: 'index'
+          mode: 'index',
+        },
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 20,
+            bottom: 80
+          }
         },
         onClick: function(event, elements) {
           if (elements && elements.length > 0) {
             const index = elements[0].index;
             const clickedData = data[index];
 
-            // 디버깅을 위한 로그 추가
             console.log('클릭한 데이터:', {
               id: clickedData.id,
               measureDatetime: clickedData.measureDatetime,
@@ -624,7 +718,6 @@
               remark: clickedData.remark
             });
 
-            // 서버로 전송되는 데이터 확인
             console.log('서버로 전송될 데이터 형식:', {
               id: clickedData.id,
               measureDateTime: formatDateForInput(clickedData.measureDatetime),
@@ -633,10 +726,9 @@
               pulse: clickedData.pulse,
               remark: clickedData.remark || ''
             });
-            // datetime-local input에 맞는 형식으로 날짜 변환
+
             const formattedDateTime = formatDateForInput(clickedData.measureDatetime);
 
-            // 모달 필드 설정
             document.getElementById('editId').value = clickedData.id;
             document.getElementById('editDateTime').value = formattedDateTime;
             document.getElementById('editSystolic').value = clickedData.systolic;
@@ -644,7 +736,6 @@
             document.getElementById('editPulse').value = clickedData.pulse;
             document.getElementById('editRemark').value = clickedData.remark || '';
 
-            // Bootstrap 4 모달 표시
             $('#editModal').modal('show');
           }
         },
@@ -705,7 +796,6 @@
               weight: 'bold'
             }
           },
-          // 기존 annotation 설정은 동일하게 유지
           annotation: {
             annotations: {
               highSystolic: {
@@ -751,12 +841,23 @@
           x: {
             ticks: {
               maxRotation: 45,
-              minRotation: 45
+              minRotation: 45,
+              // autoSkip을 활성화하고 maxTicksLimit로 표시할 개수 조절
+              autoSkip: true,
+              maxTicksLimit: Math.ceil(data.length / 3), // 데이터를 3일 단위로 표시
+              font: {
+                size: 11
+              },
+              padding: 5 // padding 값 축소
             },
             grid: {
               display: false
-            }
-          },
+            },
+            offset: true,
+            // 차트 아래쪽 여백 조절
+            afterFit: function(scale) {
+              scale.height = 70   ; // 하단 여백 크기 직접 지정
+            },
           y: {
             beginAtZero: false,
             min: 40,
@@ -786,8 +887,8 @@
           }
         }
       }
-    });
-  }
+    }
+  },
   function updateBloodPressure(data) {
 
     const csrfToken = document.querySelector("meta[name='_csrf']").content;
@@ -811,6 +912,7 @@
               console.error('Error:', error);
               alert('데이터 수정에 실패했습니다.');
             });
+  });
   }
 
   function formatDateForInput(dateTimeStr) {
@@ -850,33 +952,74 @@
         }
       });
     });
+  // getNextMeasurementTime 함수 추가
+  function getNextMeasurementTime() {
+    const now = new Date();
+    const morning = new Date(now).setHours(9, 0, 0, 0);
+    const evening = new Date(now).setHours(21, 0, 0, 0);
+
+    if (now.getTime() < morning) {
+      return "오늘 오전 9시";
+    } else if (now.getTime() < evening) {
+      return "오늘 오후 9시";
+    } else {
+      return "내일 오전 9시";
+    }
+  }
 
 
-    // 2. 차트 초기화
-    const initializeCharts = () => {
-      if (typeof chartData === 'undefined' || !chartData) {
-        console.error('Chart data not initialized');
-        return false;
-      }
+  // 2. 차트 초기화
+  const initializeCharts = () => {
+    if (typeof chartData === 'undefined' || !chartData) {
+      console.error('Chart data not initialized');
+      return false;
+    }
 
-      try {
-        const charts = {
-          chart24h: createChart('chart24h', chartData.data24h, '24h'),
-          chart7d: createChart('chart7d', chartData.data7d, '7d'),
-          chart3m: createChart('chart3m', chartData.data3m, '3m'),
-          chart6m: createChart('chart6m', chartData.data6m, '6m'),
-          chart1y: createChart('chart1y', chartData.data1y, '1y')
-        };
-        console.log('Charts created successfully:', charts);
-        return true;
-      } catch (error) {
-        console.error('Error creating charts:', error);
-        return false;
+    // 데이터 검증 및 경고 메시지 표시
+    const validateChartData = (canvasId, data) => {
+      const container = document.querySelector(`#${canvasId}`).closest('.chart-container');
+      const warningElement = container.querySelector('.data-warning');
+      const chartArea = container.querySelector('.chart-area');
+      const feedbackElement = container.querySelector('.data-feedback');
+
+      if (!data || data.length < 2) {
+        warningElement.style.display = 'block';
+        feedbackElement.style.display = 'none';
+        const nextMeasurement = getNextMeasurementTime();
+        warningElement.querySelector('.next-measurement').textContent =
+                `다음 측정 권장 시간: ${nextMeasurement}`;
+      } else {
+        warningElement.style.display = 'none';
+        feedbackElement.style.display = data.length < 4 ? 'block' : 'none';
       }
     };
 
-    // 차트 초기화 실행
-    initializeCharts();
+    try {
+      // 먼저 기존 차트 생성
+      const charts = {
+        chart24h: createChart('chart24h', chartData.data24h, '24h'),
+        chart7d: createChart('chart7d', chartData.data7d, '7d'),
+        chart3m: createChart('chart3m', chartData.data3m, '3m'),
+        chart6m: createChart('chart6m', chartData.data6m, '6m'),
+        chart1y: createChart('chart1y', chartData.data1y, '1y')
+      };
+
+      // 그 후 데이터 검증 수행
+      Object.entries(chartData).forEach(([key, data]) => {
+        const canvasId = key.replace('data', 'chart');
+        validateChartData(canvasId, data);
+      });
+
+      console.log('Charts created successfully:', charts);
+      return true;
+    } catch (error) {
+      console.error('Error creating charts:', error);
+      return false;
+    }
+  };
+
+  // 차트 초기화 실행
+  initializeCharts();
 
   function showEditModal(data) {
     document.getElementById('editId').value = data.id;
@@ -887,6 +1030,7 @@
     document.getElementById('editRemark').value = data.remark || '';
 
     $('#editModal').modal('show');
+
   }
   /*]]>*/
 
