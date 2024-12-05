@@ -70,6 +70,18 @@
       padding-bottom: 10px;       /* 20px에서 10px로 감소 */
     }
 
+    /* 24시간과 7일 차트에 대한 특별 스타일 */
+    #hours24 .chart-container,
+    #days7 .chart-container {
+      min-width: 100%; /* 컨테이너를 화면 너비에 맞춤 */
+      width: 100%; /* 명시적 너비 설정 */
+    }
+    /* 24시간과 7일 차트의 wrapper에 대한 특별 스타일 */
+    #hours24 .chart-wrapper,
+    #days7 .chart-wrapper {
+      overflow-x: hidden; /* 스크롤 제거 */
+    }
+
     /* 버튼과 범례 관련 스타일 */
     .button-container {
       position: absolute;
@@ -638,281 +650,281 @@
     console.log(`Creating chart for ${canvasId} with ${data.length} data points`);
 
     return new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.map(d => formatDate(d.measureDatetime, period)),
-        datasets: [
-          {
-            label: '수축기',
-            data: data.map(d => d.systolic),
-            borderColor: 'rgba(255,0,0,0.5)',
-            backgroundColor: 'rgba(255,0,0,0.5)',
-            fill: false,
-            tension: 0.1,
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(255,0,0,0.5)',
-            pointBorderColor: 'rgba(255,0,0,0.5)',
-            pointHoverBackgroundColor: 'rgb(255,0,0)',
-            pointHoverBorderColor: 'rgb(255,0,0)',
-            pointHoverRadius: 6,
-            pointHoverBorderWidth: 2
-          },
-          {
-            label: '이완기',
-            data: data.map(d => d.diastolic),
-            borderColor: 'rgba(0,0,255,0.5)',
-            backgroundColor: 'rgba(0,0,255,0.5)',
-            fill: false,
-            tension: 0.1,
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(0,0,255,0.5)',
-            pointBorderColor: 'rgba(0,0,255,0.5)',
-            pointHoverBackgroundColor: 'rgb(0,0,255)',
-            pointHoverBorderColor: 'rgb(0,0,255)',
-            pointHoverRadius: 6,
-            pointHoverBorderWidth: 2
-          },
-          {
-            label: '맥박',
-            data: data.map(d => d.pulse),
-            borderColor: 'rgba(255,127,0,0.5)',
-            backgroundColor: 'rgba(255,127,0,0.5)',
-            fill: false,
-            tension: 0.1,
-            borderWidth: 2,
-            pointBackgroundColor: 'rgba(255,127,0,0.5)',
-            pointBorderColor: 'rgba(255,127,0,0.5)',
-            pointHoverBackgroundColor: 'rgb(255,127,0)',
-            pointHoverBorderColor: 'rgb(255,127,0)',
-            pointHoverRadius: 6,
-            pointHoverBorderWidth: 2
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          intersect: false,
-          mode: 'index',
-        },
-        layout: {
-          padding: {
-            left: 10,
-            right: 10,
-            top: 20,
-            bottom: 80
-          }
-        },
-        onClick: function(event, elements) {
-          if (elements && elements.length > 0) {
-            const index = elements[0].index;
-            const clickedData = data[index];
-
-            console.log('클릭한 데이터:', {
-              id: clickedData.id,
-              measureDatetime: clickedData.measureDatetime,
-              systolic: clickedData.systolic,
-              diastolic: clickedData.diastolic,
-              pulse: clickedData.pulse,
-              remark: clickedData.remark
-            });
-
-            console.log('서버로 전송될 데이터 형식:', {
-              id: clickedData.id,
-              measureDateTime: formatDateForInput(clickedData.measureDatetime),
-              systolic: clickedData.systolic,
-              diastolic: clickedData.diastolic,
-              pulse: clickedData.pulse,
-              remark: clickedData.remark || ''
-            });
-
-            const formattedDateTime = formatDateForInput(clickedData.measureDatetime);
-
-            document.getElementById('editId').value = clickedData.id;
-            document.getElementById('editDateTime').value = formattedDateTime;
-            document.getElementById('editSystolic').value = clickedData.systolic;
-            document.getElementById('editDiastolic').value = clickedData.diastolic;
-            document.getElementById('editPulse').value = clickedData.pulse;
-            document.getElementById('editRemark').value = clickedData.remark || '';
-
-            $('#editModal').modal('show');
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            titleColor: '#000',
-            bodyColor: '#000',
-            borderColor: '#ddd',
-            borderWidth: 1,
-            padding: 10,
-            callbacks: {
-              title: function (context) {
-                const dataIndex = context[0].dataIndex;
-                const measureDate = new Date(data[dataIndex].measureDatetime);
-                return measureDate.toLocaleString('ko-KR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: false
-                });
+              type: 'line',
+              data: {
+                labels: data.map(d => formatDate(d.measureDatetime, period)),
+                datasets: [
+                  {
+                    label: '수축기',
+                    data: data.map(d => d.systolic),
+                    borderColor: 'rgba(255,0,0,0.5)',
+                    backgroundColor: 'rgba(255,0,0,0.5)',
+                    fill: false,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(255,0,0,0.5)',
+                    pointBorderColor: 'rgba(255,0,0,0.5)',
+                    pointHoverBackgroundColor: 'rgb(255,0,0)',
+                    pointHoverBorderColor: 'rgb(255,0,0)',
+                    pointHoverRadius: 6,
+                    pointHoverBorderWidth: 2
+                  },
+                  {
+                    label: '이완기',
+                    data: data.map(d => d.diastolic),
+                    borderColor: 'rgba(0,0,255,0.5)',
+                    backgroundColor: 'rgba(0,0,255,0.5)',
+                    fill: false,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(0,0,255,0.5)',
+                    pointBorderColor: 'rgba(0,0,255,0.5)',
+                    pointHoverBackgroundColor: 'rgb(0,0,255)',
+                    pointHoverBorderColor: 'rgb(0,0,255)',
+                    pointHoverRadius: 6,
+                    pointHoverBorderWidth: 2
+                  },
+                  {
+                    label: '맥박',
+                    data: data.map(d => d.pulse),
+                    borderColor: 'rgba(255,127,0,0.5)',
+                    backgroundColor: 'rgba(255,127,0,0.5)',
+                    fill: false,
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(255,127,0,0.5)',
+                    pointBorderColor: 'rgba(255,127,0,0.5)',
+                    pointHoverBackgroundColor: 'rgb(255,127,0)',
+                    pointHoverBorderColor: 'rgb(255,127,0)',
+                    pointHoverRadius: 6,
+                    pointHoverBorderWidth: 2
+                  }
+                ]
               },
-              label: function (context) {
-                const dataIndex = context.dataIndex;
-                const value = context.raw;
-                let label = '';
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                  intersect: false,
+                  mode: 'index',
+                },
+                layout: {
+                  padding: {
+                    left: 10,
+                    right: 10,
+                    top: 20,
+                    bottom: 80
+                  }
+                },
+                onClick: function(event, elements) {
+                  if (elements && elements.length > 0) {
+                    const index = elements[0].index;
+                    const clickedData = data[index];
 
-                switch (context.dataset.label) {
-                  case '수축기':
-                    label = `수축기: ${value} mmHg`;
-                    break;
-                  case '이완기':
-                    label = `이완기: ${value} mmHg`;
-                    break;
-                  case '맥박':
-                    label = `맥박: ${value} bpm`;
-                    break;
+                    console.log('클릭한 데이터:', {
+                      id: clickedData.id,
+                      measureDatetime: clickedData.measureDatetime,
+                      systolic: clickedData.systolic,
+                      diastolic: clickedData.diastolic,
+                      pulse: clickedData.pulse,
+                      remark: clickedData.remark
+                    });
+
+                    console.log('서버로 전송될 데이터 형식:', {
+                      id: clickedData.id,
+                      measureDateTime: formatDateForInput(clickedData.measureDatetime),
+                      systolic: clickedData.systolic,
+                      diastolic: clickedData.diastolic,
+                      pulse: clickedData.pulse,
+                      remark: clickedData.remark || ''
+                    });
+
+                    const formattedDateTime = formatDateForInput(clickedData.measureDatetime);
+
+                    document.getElementById('editId').value = clickedData.id;
+                    document.getElementById('editDateTime').value = formattedDateTime;
+                    document.getElementById('editSystolic').value = clickedData.systolic;
+                    document.getElementById('editDiastolic').value = clickedData.diastolic;
+                    document.getElementById('editPulse').value = clickedData.pulse;
+                    document.getElementById('editRemark').value = clickedData.remark || '';
+
+                    $('#editModal').modal('show');
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  },
+                  tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#000',
+                    bodyColor: '#000',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                      title: function (context) {
+                        const dataIndex = context[0].dataIndex;
+                        const measureDate = new Date(data[dataIndex].measureDatetime);
+                        return measureDate.toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        });
+                      },
+                      label: function (context) {
+                        const dataIndex = context.dataIndex;
+                        const value = context.raw;
+                        let label = '';
+
+                        switch (context.dataset.label) {
+                          case '수축기':
+                            label = `수축기: ${value} mmHg`;
+                            break;
+                          case '이완기':
+                            label = `이완기: ${value} mmHg`;
+                            break;
+                          case '맥박':
+                            label = `맥박: ${value} bpm`;
+                            break;
+                        }
+                        return label;
+                      },
+                      afterBody: function (context) {
+                        const dataIndex = context[0].dataIndex;
+                        const remark = data[dataIndex].remark;
+                        return remark ? [`메모: ${remark}`] : [];
+                      },
+                      labelTextColor: function (context) {
+                        return '#000';
+                      }
+                    },
+                    titleFont: {
+                      weight: 'bold'
+                    }
+                  },
+                  annotation: {
+                    annotations: {
+                      highSystolic: {
+                        type: 'line',
+                        yMin: 140,
+                        yMax: 140,
+                        borderColor: 'rgba(255, 0, 0, 0.3)',
+                        borderWidth: 1,
+                        borderDash: [3, 3],
+                        drawTime: 'beforeDatasetsDraw'
+                      },
+                      highDiastolic: {
+                        type: 'line',
+                        yMin: 90,
+                        yMax: 90,
+                        borderColor: 'rgba(255, 0, 0, 0.3)',
+                        borderWidth: 1,
+                        borderDash: [3, 3],
+                        drawTime: 'beforeDatasetsDraw'
+                      },
+                      lowSystolic: {
+                        type: 'line',
+                        yMin: 90,
+                        yMax: 90,
+                        borderColor: 'rgba(0, 0, 255, 0.3)',
+                        borderWidth: 1,
+                        borderDash: [3, 3],
+                        drawTime: 'beforeDatasetsDraw'
+                      },
+                      lowDiastolic: {
+                        type: 'line',
+                        yMin: 60,
+                        yMax: 60,
+                        borderColor: 'rgba(0, 0, 255, 0.3)',
+                        borderWidth: 1,
+                        borderDash: [3, 3],
+                        drawTime: 'beforeDatasetsDraw'
+                      }
+                    }
+                  },
+                },
+                scales: {
+                  x: {
+                    ticks: {
+                      maxRotation: 45,
+                      minRotation: 45,
+                      // autoSkip을 활성화하고 maxTicksLimit로 표시할 개수 조절
+                      autoSkip: true,
+                      maxTicksLimit: Math.ceil(data.length / 3), // 데이터를 3일 단위로 표시
+                      font: {
+                        size: 11
+                      },
+                      padding: 5 // padding 값 축소
+                    },
+                    grid: {
+                      display: false
+                    },
+                    offset: true,
+                    // 차트 아래쪽 여백 조절
+                    afterFit: function(scale) {
+                      scale.height = 70   ; // 하단 여백 크기 직접 지정
+                    },
+                    y: {
+                      beginAtZero: false,
+                      min: 40,
+                      max: 200,
+                      position: 'left',
+                      grid: {
+                        color: function(context) {
+                          if (context.tick.value === 140 || context.tick.value === 90 || context.tick.value === 60) {
+                            return 'rgba(0, 0, 0, 0.2)';
+                          }
+                          return 'rgba(0, 0, 0, 0.1)';
+                        }
+                      },
+                      ticks: {
+                        stepSize: 10,
+                        callback: function(value) {
+                          if (value === 140) {
+                            return '고혈압 수축기 기준 - ' + value;
+                          } else if (value === 90) {
+                            return ' 고혈압 이완기/저혈압 수축기 기준 - ' + value;
+                          } else if (value === 60) {
+                            return '저혈압 이완기 기준 - ' + value;
+                          }
+                          return value;
+                        }
+                      }
+                    }
+                  }
                 }
-                return label;
-              },
-              afterBody: function (context) {
-                const dataIndex = context[0].dataIndex;
-                const remark = data[dataIndex].remark;
-                return remark ? [`메모: ${remark}`] : [];
-              },
-              labelTextColor: function (context) {
-                return '#000';
               }
             },
-            titleFont: {
-              weight: 'bold'
-            }
-          },
-          annotation: {
-            annotations: {
-              highSystolic: {
-                type: 'line',
-                yMin: 140,
-                yMax: 140,
-                borderColor: 'rgba(255, 0, 0, 0.3)',
-                borderWidth: 1,
-                borderDash: [3, 3],
-                drawTime: 'beforeDatasetsDraw'
-              },
-              highDiastolic: {
-                type: 'line',
-                yMin: 90,
-                yMax: 90,
-                borderColor: 'rgba(255, 0, 0, 0.3)',
-                borderWidth: 1,
-                borderDash: [3, 3],
-                drawTime: 'beforeDatasetsDraw'
-              },
-              lowSystolic: {
-                type: 'line',
-                yMin: 90,
-                yMax: 90,
-                borderColor: 'rgba(0, 0, 255, 0.3)',
-                borderWidth: 1,
-                borderDash: [3, 3],
-                drawTime: 'beforeDatasetsDraw'
-              },
-              lowDiastolic: {
-                type: 'line',
-                yMin: 60,
-                yMax: 60,
-                borderColor: 'rgba(0, 0, 255, 0.3)',
-                borderWidth: 1,
-                borderDash: [3, 3],
-                drawTime: 'beforeDatasetsDraw'
-              }
-            }
-          },
-        },
-        scales: {
-          x: {
-            ticks: {
-              maxRotation: 45,
-              minRotation: 45,
-              // autoSkip을 활성화하고 maxTicksLimit로 표시할 개수 조절
-              autoSkip: true,
-              maxTicksLimit: Math.ceil(data.length / 3), // 데이터를 3일 단위로 표시
-              font: {
-                size: 11
-              },
-              padding: 5 // padding 값 축소
-            },
-            grid: {
-              display: false
-            },
-            offset: true,
-            // 차트 아래쪽 여백 조절
-            afterFit: function(scale) {
-              scale.height = 70   ; // 하단 여백 크기 직접 지정
-            },
-          y: {
-            beginAtZero: false,
-            min: 40,
-            max: 200,
-            position: 'left',
-            grid: {
-              color: function(context) {
-                if (context.tick.value === 140 || context.tick.value === 90 || context.tick.value === 60) {
-                  return 'rgba(0, 0, 0, 0.2)';
-                }
-                return 'rgba(0, 0, 0, 0.1)';
-              }
-            },
-            ticks: {
-              stepSize: 10,
-              callback: function(value) {
-                if (value === 140) {
-                  return '고혈압 수축기 기준 - ' + value;
-                } else if (value === 90) {
-                  return ' 고혈압 이완기/저혈압 수축기 기준 - ' + value;
-                } else if (value === 60) {
-                  return '저혈압 이완기 기준 - ' + value;
-                }
-                return value;
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  function updateBloodPressure(data) {
+            function updateBloodPressure(data) {
 
-    const csrfToken = document.querySelector("meta[name='_csrf']").content;
-    const csrfHeader = document.querySelector("meta[name='_csrf_header']").content;
+              const csrfToken = document.querySelector("meta[name='_csrf']").content;
+              const csrfHeader = document.querySelector("meta[name='_csrf_header']").content;
 
-    fetch('/api/bloodpressure/update', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        [csrfHeader]: csrfToken
-      },
-      body: JSON.stringify(data)
-    })
-            .then(response => {
-              if (!response.ok) {
-                throw new Error('Update failed');
-              }
-              location.reload();
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              alert('데이터 수정에 실패했습니다.');
+              fetch('/api/bloodpressure/update', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(data)
+              })
+                      .then(response => {
+                        if (!response.ok) {
+                          throw new Error('Update failed');
+                        }
+                        location.reload();
+                      })
+                      .catch(error => {
+                        console.error('Error:', error);
+                        alert('데이터 수정에 실패했습니다.');
+                      });
             });
-  });
   }
 
   function formatDateForInput(dateTimeStr) {
@@ -925,33 +937,33 @@
 
     const charts = document.querySelectorAll('.chart-container');
 
-      // 1. 저장된 탭 처리
-      const savedTab = localStorage.getItem('activeTab');
-      if (savedTab) {
-        const tab = document.getElementById(savedTab);
-        if (tab) {
-          tab.click();
-        }
-        localStorage.removeItem('activeTab');
+    // 1. 저장된 탭 처리
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab) {
+      const tab = document.getElementById(savedTab);
+      if (tab) {
+        tab.click();
       }
-      // 각 차트의 데이터를 필터링
-      charts.forEach(chart => {
-        const chartInstance = echarts.getInstanceByDom(chart);
-        if (chartInstance) {
-          const originalData = chartInstance.getOption().dataset[0].source;
-          const filteredData = originalData.filter(item =>
-                  item.remark && item.remark.toLowerCase().includes(searchTerm)
-          );
+      localStorage.removeItem('activeTab');
+    }
+    // 각 차트의 데이터를 필터링
+    charts.forEach(chart => {
+      const chartInstance = echarts.getInstanceByDom(chart);
+      if (chartInstance) {
+        const originalData = chartInstance.getOption().dataset[0].source;
+        const filteredData = originalData.filter(item =>
+                item.remark && item.remark.toLowerCase().includes(searchTerm)
+        );
 
-          // 필터링된 데이터로 차트 업데이트
-          chartInstance.setOption({
-            dataset: [{
-              source: searchTerm ? filteredData : originalData
-            }]
-          });
-        }
-      });
+        // 필터링된 데이터로 차트 업데이트
+        chartInstance.setOption({
+          dataset: [{
+            source: searchTerm ? filteredData : originalData
+          }]
+        });
+      }
     });
+  });
   // getNextMeasurementTime 함수 추가
   function getNextMeasurementTime() {
     const now = new Date();
