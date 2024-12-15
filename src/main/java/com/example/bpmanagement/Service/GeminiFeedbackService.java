@@ -19,35 +19,44 @@ import java.util.stream.Collectors;
 @Service
 public class GeminiFeedbackService implements BloodPressureFeedbackService {
 
-
-
+    // Gemini API 키를 애플리케이션 설정에서 주입받음
     @Value("${gemini.api.key}")
     private String apiKey;
 
+    // RestTemplate과 ObjectMapper 객체를 선언하여 API 호출과 JSON 파싱을 관리
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    // Gemini API URL 상수
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=";
+
+    // 날짜 포맷팅을 위한 DateTimeFormatter 객체
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    // 생성자: RestTemplate과 ObjectMapper 객체 초기화
     public GeminiFeedbackService() {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
     }
 
+    // 혈압 데이터를 기반으로 피드백을 생성하는 메서드
     @Override
     public String generateFeedback(List<CombinedBloodPressureData> data, String period) {
 
         try {
-            // 데이터 최적화
+            // 데이터를 최적화하여 중요한 정보만 추출
             List<CombinedBloodPressureData> limitedData = limitDataForAnalysis(data);
+
+            // Gemini API 호출을 위한 프롬프트 생성
             String prompt = createPrompt(limitedData, period);
 
-            // API 요청 본문 생성
+            // API 요청 본문을 JSON 형태로 구성
             ObjectNode requestBody = objectMapper.createObjectNode();
             ObjectNode content = objectMapper.createObjectNode();
             ArrayNode contents = objectMapper.createArrayNode();
             ArrayNode parts = objectMapper.createArrayNode();
 
+            // 프롬프트 텍스트를 API 요청 본문에 추가
             ObjectNode part = objectMapper.createObjectNode();
             part.put("text", prompt);
             parts.add(part);
@@ -56,27 +65,29 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
             contents.add(content);
             requestBody.set("contents", contents);
 
-            // 디버그 로그 추가
+            // 디버그 로그로 요청 본문 확인
             log.debug("Request Body: {}", requestBody.toString());
             log.debug("API URL: {}", GEMINI_API_URL + apiKey);
 
-            // 헤더 설정
+            // 요청 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // API 요청
+            // API 요청을 위한 HttpEntity 객체 생성
             HttpEntity<String> request = new HttpEntity<>(requestBody.toString(), headers);
+
+            // Gemini API에 POST 요청을 보내고 응답 받기
             ResponseEntity<String> response = restTemplate.postForEntity(
                     GEMINI_API_URL + apiKey,
                     request,
                     String.class
             );
 
-            // 응답 파싱
+            // API 응답을 JSON으로 파싱
             JsonNode responseNode = objectMapper.readTree(response.getBody());
             log.debug("API Response: {}", responseNode.toString());
 
-            // 응답 처리
+            // 응답에서 피드백을 추출
             if (responseNode.has("candidates") && responseNode.get("candidates").isArray()
                     && responseNode.get("candidates").size() > 0) {
                 JsonNode candidate = responseNode.get("candidates").get(0);
@@ -90,15 +101,17 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
             return "피드백 생성 오류: 예상한 응답을 받지 못했습니다.";
 
         } catch (Exception e) {
+            // 예외 발생 시 에러 메시지 반환
             log.error("피드백 생성 중 오류 발생", e);
             return "피드백 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
         }
     }
 
+    // 분석을 위한 데이터를 제한하는 메서드
     private List<CombinedBloodPressureData> limitDataForAnalysis(List<CombinedBloodPressureData> data) {
         List<CombinedBloodPressureData> significantData = new ArrayList<>();
 
-        // 중요 데이터 선택 (고혈압, 저혈압, 스트레스 상황)
+        // 고혈압, 저혈압, 스트레스와 관련된 데이터를 필터링하여 중요한 데이터를 추출
         List<CombinedBloodPressureData> abnormalData = data.stream()
                 .filter(bp -> bp.getRemark() != null &&
                         (bp.getRemark().contains("고혈압") ||
@@ -107,7 +120,7 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
                 .collect(Collectors.toList());
         significantData.addAll(abnormalData);
 
-        // 최근 데이터 추가
+        // 최근 데이터를 추가하여 최소 10개의 데이터를 확보
         if (significantData.size() < 10) {
             List<CombinedBloodPressureData> recentData = data.stream()
                     .sorted(Comparator.comparing(CombinedBloodPressureData::getMeasureDatetime).reversed())
@@ -119,12 +132,13 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
         return significantData;
     }
 
+    // 요청할 프롬프트를 생성하는 메서드
     private String createPrompt(List<CombinedBloodPressureData> data, String period) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("숙련된 고혈압 전문의의 관점에서 다음 혈압 데이터를 분석해 주세요.\n\n");
         prompt.append("분석 기간: ").append(period).append("\n\n");
 
-        // 통계 정보를 더 상세하게
+        // 데이터의 수축기, 이완기, 맥박에 대한 통계 생성
         DoubleSummaryStatistics systolicStats = data.stream()
                 .mapToDouble(CombinedBloodPressureData::getSystolic)
                 .summaryStatistics();
@@ -155,6 +169,7 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
                 ))
         );
 
+        // 분석 항목 추가
         prompt.append("\n다음 항목들에 대해 상세히 분석해주세요:\n");
         prompt.append("1. 전반적인 혈압 상태 분석\n");
         prompt.append("   - 현재 혈압의 심각성 정도\n");
@@ -189,12 +204,13 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
         return prompt.toString();
     }
 
+    // API 응답을 HTML 형식으로 변환하는 메서드
     private String formatResponse(String response) {
-        // 기본적인 HTML 스타일 추가
+        // HTML 스타일을 추가하여 기본적인 서식 적용
         StringBuilder formatted = new StringBuilder();
         formatted.append("<div style='font-family: Arial, sans-serif; line-height: 1.6;'>");
 
-        // 마크다운 스타일의 볼드 텍스트 변환
+        // 마크다운에서 볼드 처리된 텍스트를 HTML의 strong 태그로 변환
         String htmlText = response.replaceAll("\\*\\*(.*?)\\*\\*", "<strong>$1</strong>");
 
         // 줄바꿈 처리
@@ -209,10 +225,11 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
         return formatted.toString();
     }
 
+    // API 연결 테스트 메서드
     @Override
     public String testApiConnection() {
         try {
-            // 요청 본문 생성
+            // 요청 본문을 생성하여 "Say hello"라는 텍스트를 포함
             ObjectNode requestBody = objectMapper.createObjectNode();
             requestBody.putArray("contents")
                     .addObject()
@@ -220,7 +237,7 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
                     .putArray("parts")
                     .add("Say hello"); // 수정된 형식
 
-            // 헤더 설정
+            // 요청 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -232,7 +249,7 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
                     String.class
             );
 
-            // 응답 파싱
+            // 응답을 파싱하여 텍스트 반환
             JsonNode responseNode = objectMapper.readTree(response.getBody());
             return responseNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
@@ -242,3 +259,4 @@ public class GeminiFeedbackService implements BloodPressureFeedbackService {
         }
     }
 }
+

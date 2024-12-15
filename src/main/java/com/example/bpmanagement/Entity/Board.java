@@ -34,6 +34,10 @@ public class Board {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardFile> files = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
     private int viewCount;
 
     @Column(updatable = false)
@@ -62,5 +66,17 @@ public class Board {
     public void removeFile(BoardFile file) {
         files.remove(file);
         file.setBoard(null);
+    }
+
+    // 댓글 추가를 위한 편의 메서드
+    public void addComment(Comment comment) {
+        comments.add(comment);
+        comment.setBoard(this);
+    }
+
+    // 댓글 제거를 위한 편의 메서드
+    public void removeComment(Comment comment) {
+        comments.remove(comment);
+        comment.setBoard(null);
     }
 }
